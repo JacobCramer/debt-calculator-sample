@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title></title>
+<!-- <style></style> -->
+</head>
+<body>
+
+<div id="debtProgram" class="noJavaScript">
+
+  <p id="javaScriptNotification">Please enable JavaScript :)</p>
+
+  <table id="debtTable">
+    <tr>
+      <th>Delete Entry</th>
+      <th>Amount Owed</th>
+      <th>APR</th>
+      <th>Minimum Monthly Payment</th>
+    </tr>
+  </table>
+
+  <div id="debtAllocation">
+    <p>How to allocate amount over monthly minimum:</p>
+    <select id="debtAllocationSelect">
+      <option>Pay to highest priority debt</option>
+      <option>Split evenly between all debts</option>
+      <option>Split proportionally by amount owed</option>
+    </select>
+  </div>
+
+  <div id="debtPrioritization">
+    <p>How to prioritize debts:</p>
+    <select id="debtPrioritizationSelect">
+      <option>Highest APR first</option>
+      <option>Lowest amount owed first</option>
+      <option>Use order entered by user above</option>
+    </select>
+  </div>
+
+  <div id="monthlyPayments">
+    <input type="range" name="points" min="0" max="100">
+  </div>
+</div>
+
+<!--Script files are split based on the MVP (Model View Presenter) design pattern. This is arguably overkill for a script of this size, but has been done for the sake of demonstrating the concept.-->
+<script src="scripts/model.js"></script>
+<script src="scripts/view.js"></script>
+<script src="scripts/presenter.js"></script>
+
+</body>
+</html>
