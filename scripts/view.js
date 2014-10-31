@@ -1,7 +1,4 @@
 
-// JSHint directives
-/* exported firstTimeSetup, onSystemUpdatePayoffTime, registerPresenter */
-
 var koratDragonDen = {};
 koratDragonDen.debtCalculatorSample = {};
 koratDragonDen.debtCalculatorSample.view = (function view(){
@@ -140,8 +137,9 @@ koratDragonDen.debtCalculatorSample.view = (function view(){
 
       // TODO - Add hook for range input
 
-      for (var i = 0; i < startingDebtLines; i++)
+      for (var i = 0; i < startingDebtLines; i++) {
         newDebtInput();
+      }
     },
 
     // TODO - Is this how we want to handle this?

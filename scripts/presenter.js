@@ -1,10 +1,7 @@
 
-// JSHint directives
-/* exported firstTimeSetup */
 
 var koratDragonDen = koratDragonDen || {};
 koratDragonDen.debtCalculatorSample = koratDragonDen.debtCalculatorSample || {};
-
 
 koratDragonDen.debtCalculatorSample.presenter = (function presenter(){
   'use strict';
@@ -51,16 +48,3 @@ koratDragonDen.debtCalculatorSample.presenter = (function presenter(){
   };
 
 }());
-
-
-
-
-function onViewUpdateDebtInfo() {}
-
-function onViewDeleteDebtEntry() {}
-
-function onViewUpdatePriorityMethod() {}
-
-function onViewUpdateAllocationMethod() {}
-
-function onViewGracefulDisconnect() {}
