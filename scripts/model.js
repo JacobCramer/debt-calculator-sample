@@ -11,8 +11,8 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
   // TODO - Add support for this
   // var customPriority = [];
 
-  // var allocationMethod = 0;
-  // var prioritizationMethod = 0;
+  var allocationMethod = 0;
+  var prioritizationMethod = 0;
   var monthlyPayments = 0.0;
 
   var Debt = function Debt(uid) {
@@ -111,21 +111,41 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
     return orderedDebts;
   };
 
+  var getMonthlyMinimumForPayoffTime = function getMonthlyMinimumForPayoffTime(orderedDebtsObject) {
+
+    var currentMonthlyMinimum = 0.0;
+    for (var i = 0; i < orderedDebtsObject.length; i++) {
+      currentMonthlyMinimum += orderedDebtsObject[i].debtObject.minimumMonthlyPayment;
+    }
+
+    return currentMonthlyMinimum;
+  };
+
   // TODO - This whole thing is a brainstormy mess. Fix it.
   var calculatePayoffTime = function calculatePayoffTime() {
 
-    var debt;
+    var debt, i;
     var orderedDebts = [];
 
-    // If custom priority, use customPriority
+    // TODO - Change these to enums
+    switch (allocationMethod) {
 
-    // If highest APR
-    orderedDebts = getDebtsSortedByHighestApr();
+      case 'highestApr':
+        orderedDebts = getDebtsSortedByHighestApr();
+        break;
 
-    // If lowest owed
-    orderedDebts = getDebtsSortedByLowestOwed();
+      case 'lowestOwed':
+        orderedDebts = getDebtsSortedByLowestOwed();
+        break;
 
-    // Recursive function
+      case 'custom':
+        // TODO - If custom priority, use customPriority
+        break;
+
+      default:
+        // TODO - How do we want to handle this?
+    }
+
     var months = 0;
     // TODO - Add stop for amounts that are just absurdly long
     while (orderedDebts.length > 0) {
@@ -133,82 +153,60 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
 
       months++;
 
+      var orderedDebtsLength = orderedDebts.length;
+
       // Calculate interest
-      // TODO - This is an array
-      for (debt in orderedDebts) {
-        if (orderedDebts.hasOwnProperty(debt)) {
-          orderedDebts[debt].remainingOwed *= ( 1.0 + (orderedDebts[debt].debtObject.apr / 1200.0) );
-        }
+      for (i = 0; i < orderedDebtsLength; i++) {
+        // TODO - Cache monthly interest rate
+        orderedDebts[i].remainingOwed *= ( 1.0 + (orderedDebts[i].debtObject.apr / 1200.0) );
       }
 
       // Determine amount over monthly minimum, if any
-      var currentMonthlyMinimum = 0.0;
-      // TODO - This is an array
-      for (debt in orderedDebts) {
-        if (orderedDebts.hasOwnProperty(debt)) {
-          currentMonthlyMinimum += orderedDebts[debt].debtObject.minimumMonthlyPayment;
-        }
-      }
-
+      var currentMonthlyMinimum = getMonthlyMinimumForPayoffTime(orderedDebts);
       var amountOverMonthlyMinimum = Math.max(monthlyPayments - currentMonthlyMinimum, 0.0);
 
-        // If even split
-        var debtRemainingCounter = 0.0;
-        // TODO - This is an array
-        for (debt in orderedDebts) {
-          if (orderedDebts.hasOwnProperty(debt)) {
-            debtRemainingCounter++;
+      // TODO - Change these to enums
+      switch (prioritizationMethod) {
+
+        case 'evenSplit':
+          // TODO - Factor in when this is reset mid-calculation because of a debt(s) being paid off
+          var evenSplitExtra = amountOverMonthlyMinimum / orderedDebtsLength;
+
+          for (i = 0; i < orderedDebtsLength; i++) {
+            // TODO - Check if this subtracts more than owed
+            orderedDebts[i].remainingOwed -= (evenSplitExtra + orderedDebts[i].debtObject.minimumMonthlyPayment);
           }
-        }
+          break;
 
-        var evenSplitExtra = amountOverMonthlyMinimum / debtRemainingCounter;
-        // TODO - Factor in when this is reset mid-calculation because of a debt(s) being paid off
-
-        for (debt in orderedDebts) {
-        // TODO - This is an array
-          if (orderedDebts.hasOwnProperty(debt)) {
-            // Check if this subtracts more than owed
-            orderedDebts[debt].remainingOwed -= (evenSplitExtra + orderedDebts[debt].debtObject.minimumMonthlyPayment);
-          }
-        }
-
-
-
-
-
-        // If pay to priority
-        var remainingAmountOverMonthlyMinimum = amountOverMonthlyMinimum;
-        for (debt in orderedDebts) {
-        // TODO - This is an array
-          if (orderedDebts.hasOwnProperty(debt)) {
-            // Check if this subtracts more than owed
-            orderedDebts[debt].remainingOwed -= (remainingAmountOverMonthlyMinimum + orderedDebts[debt].debtObject.minimumMonthlyPayment);
+        case 'priorityFirst':
+          var remainingAmountOverMonthlyMinimum = amountOverMonthlyMinimum;
+          for (i = 0; i < orderedDebtsLength; i++) {
+            // TODO - Check if this subtracts more than owed
+            orderedDebts[i].remainingOwed -= (remainingAmountOverMonthlyMinimum + orderedDebts[i].debtObject.minimumMonthlyPayment);
             remainingAmountOverMonthlyMinimum -= remainingAmountOverMonthlyMinimum;
           }
-        }
+          break;
 
-
-
-
-        // If proportional split
-        var totalAmountRemaining = 0.0;
-        // TODO - This is an array
-        for (debt in orderedDebts) {
-          if (orderedDebts.hasOwnProperty(debt)) {
-            totalAmountRemaining += orderedDebts[debt].remainingOwed;
+        case 'proportionalSplit':
+          // If proportional split
+          var totalAmountRemaining = 0.0;
+          // TODO - This is an array
+          for (i = 0; i < orderedDebtsLength; i++) {
+            totalAmountRemaining += orderedDebts[i].remainingOwed;
           }
-        }
 
-        evenSplitExtra = amountOverMonthlyMinimum / debtRemainingCounter;
-        // TODO - Factor in when this is reset mid-calculation because of a debt(s) being paid off
+          evenSplitExtra = amountOverMonthlyMinimum / orderedDebtsLength;
+          // TODO - Factor in when this is reset mid-calculation because of a debt(s) being paid off
 
-        for (debt in orderedDebts) {
-        // TODO - This is an array
-          if (orderedDebts.hasOwnProperty(debt)) {
-            // Check if this subtracts more than owed
-            orderedDebts[debt].remainingOwed -= ((amountOverMonthlyMinimum * (orderedDebts[debt].remainingOwed/totalAmountRemaining)) + orderedDebts[debt].debtObject.minimumMonthlyPayment);
+          for (i = 0; i < orderedDebtsLength; i++) {
+            // TODO - Check if this subtracts more than owed
+            orderedDebts[i].remainingOwed -= ((amountOverMonthlyMinimum * (orderedDebts[i].remainingOwed/totalAmountRemaining)) + orderedDebts[i].debtObject.minimumMonthlyPayment);
           }
-        }
+          break;
+
+        default:
+          // TODO - How do we want to handle this?
+      }
     }
   };
 

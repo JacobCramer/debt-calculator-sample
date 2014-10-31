@@ -69,6 +69,7 @@ koratDragonDen.debtCalculatorSample.view = (function view(){
 
   var newDebtInput = function newDebtInput() {
 
+    // TODO - Change how this works; use the model's debt's UID
     var uniqueDebtId = generateUid();
 
     var tr = document.createElement('tr');
