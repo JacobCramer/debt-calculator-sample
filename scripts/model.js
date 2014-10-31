@@ -6,14 +6,10 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
   'use strict';
 
   var allDebts = {};
-  var subscribers = [];
-
-  // TODO - Add support for this
-  // var customPriority = [];
-
   var allocationMethod = 0;
   var prioritizationMethod = 0;
   var monthlyPayments = 0.0;
+  var subscribers = [];
 
   var Debt = function Debt(uid) {
     this.uid = uid;
@@ -43,38 +39,23 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
   };
 
   var getDebtsSortedByHighestApr = function getDebtsSortedByHighestApr() {
-    // TODO
 
-    var unorderedDebts = [];
     var orderedDebts = [];
 
     for (var debt in allDebts) {
       if (allDebts.hasOwnProperty(debt)) {
-        unorderedDebts.push(allDebts[debt].uid);
+        orderedDebts.push({
+          debtObject : allDebts[debt],
+          remainingOwed : allDebts[debt].amountOwed
+        });
       }
     }
 
-    var highestAprDebt = 0;
-    while (unorderedDebts.length > 0) {
-
-      highestAprDebt = 0;
-
-      for (var i = 1, l = unorderedDebts.length; i < l; i++) {
-        if (allDebts[unorderedDebts[i]].apr > allDebts[unorderedDebts[highestAprDebt]].apr) {
-          highestAprDebt = i;
-        }
-      }
-
-      orderedDebts.push({
-        debtObject : allDebts[unorderedDebts[highestAprDebt]],
-        remainingOwed : allDebts[unorderedDebts[highestAprDebt]].amountOwed
-      });
-
-      unorderedDebts.splice(highestAprDebt, 1);
-    }
+    orderedDebts.sort(function(a, b) {
+      return a.debtObject.apr - b.debtObject.apr;
+    });
 
     return orderedDebts;
-
   };
 
   var getDebtsSortedByLowestOwed = function getDebtsSortedByLowestOwed() {
