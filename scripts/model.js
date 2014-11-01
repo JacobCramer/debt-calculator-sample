@@ -3,15 +3,27 @@ var koratDragonDen = koratDragonDen || {};
 koratDragonDen.debtCalculatorSample = koratDragonDen.debtCalculatorSample || {};
 
 // TODO - Find places where calculations would demand we cap at two decimals
+// TODO - Rename/shorten functions?
+// TODO - Publish updates for all changes
+// TODO - Publish updates for all setters?
+// TODO - Check for a lack of changes in setters
+// TODO - Propagate all changes from setters
 koratDragonDen.debtCalculatorSample.model = (function model(){
   'use strict';
+
+  var config = {
+    // Limit how many months the repayment calculator will max out on
+    'monthLimit' : 1200
+  };
 
   var allDebts = {};
   var allocationMethod = 0;
   var prioritizationMethod = 0;
   var monthlyPayments = 0.0;
 
-  var payoffTime = undefined;
+  var totalAmountOwed = 0.0;
+  var totalMinimumMonthlyPayment = 0.0;
+  var payoffTime;
 
   var subscribers = [];
 
@@ -35,6 +47,18 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
   Debt.prototype.amountOwed = 0.0;
   Debt.prototype.minimumMonthlyPayment = 0.0;
 
+  var debtProprtyIsValid = function debtProprtyIsValid(property) {
+
+    switch (property) {
+      case 'apr':
+      case 'amountOwed':
+      case 'minimumMonthlyPayment':
+        return true;
+      default:
+        return false;
+    }
+  };
+
   // TODO - Rework this
   var publishDebtUpdates = function publishDebtUpdates(uid, updateType) {
 
@@ -54,6 +78,32 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
     for (var i = 0; i < subscribers.length; i++) {
       subscribers[i](data);
     }
+  };
+
+  var calculatetotalAmountOwed = function calculatetotalAmountOwed() {
+
+      var total = 0.0;
+
+      for (var debt in allDebts) {
+        if (allDebts.hasOwnProperty(debt)) {
+          total += allDebts[debt].amountOwed;
+        }
+      }
+
+      totalAmountOwed = total;
+  };
+
+  var calculateTotalMinimumMonthlyPayment = function calculateTotalMinimumMonthlyPayment() {
+
+      var total = 0.0;
+
+      for (var debt in allDebts) {
+        if (allDebts.hasOwnProperty(debt)) {
+          total += allDebts[debt].minimumMonthlyPayment;
+        }
+      }
+
+      totalMinimumMonthlyPayment = total;
   };
 
   // TODO - This and the function below might have combinable code
@@ -99,22 +149,10 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
     return orderedDebts;
   };
 
-  // TODO - Rework this? Move it?
-  var getMonthlyMinimumForPayoffTime = function getMonthlyMinimumForPayoffTime(orderedDebtsObject) {
-
-    var currentMonthlyMinimum = 0.0;
-    for (var i = 0; i < orderedDebtsObject.length; i++) {
-      currentMonthlyMinimum += orderedDebtsObject[i].debtObject.minimumMonthlyPayment;
-    }
-
-    return currentMonthlyMinimum;
-  };
-
   var calculatePayoffTime = function calculatePayoffTime() {
 
     var i, orderedDebts, debt, payment, extra, remaining;
 
-    // TODO - Change these to enums
     switch (prioritizationMethod) {
 
       case prioritizationMethods.HIGHEST_APR:
@@ -135,20 +173,23 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
     }
 
     var months = 0;
-    // TODO - Add stop for amounts that are just absurdly long
-    while (orderedDebts.length > 0) {
+    while (orderedDebts.length > 0 && months < config.monthLimit) {
+
       // Track how many months of paying this will take
       months++;
 
       // Calculate interest
-      // TODO - Cap this at two decimals
       for (i = 0; i < orderedDebts.length; i++) {
         debt = orderedDebts[i];
         debt.remainingOwed *= debt.monthlyInterest;
       }
 
       // Determine amount over monthly minimum, if any
-      extra = Math.max(monthlyPayments - getMonthlyMinimumForPayoffTime(orderedDebts), 0.0);
+      var currentMonthlyMinimum = 0.0;
+      for (i = 0; i < orderedDebts.length; i++) {
+        currentMonthlyMinimum += orderedDebts[i].debtObject.minimumMonthlyPayment;
+      }
+      extra = Math.max(monthlyPayments - currentMonthlyMinimum, 0.0);
 
       // Handle minimum monthly payments first
       // Looping backwards makes array object deletion logic cleaner
@@ -246,6 +287,8 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
               'Bad allocationMethod: ' + allocationMethod);
       }
     }
+
+    // Save the time it will take to payoff debts
     payoffTime = months;
   };
 
@@ -283,16 +326,18 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
       var uid = getNewUid();
       var debt = new Debt(uid);
 
-      // TODO - Clean this up?
       if (debtData !== undefined) {
-        if (debtData.apr !== undefined){
-          debt.apr = debtData.apr;
-        }
-        if (debtData.amountOwed !== undefined){
-          debt.amountOwed = debtData.amountOwed;
-        }
-        if (debtData.minimumMonthlyPayment !== undefined){
-          debt.minimumMonthlyPayment = debtData.minimumMonthlyPayment;
+
+        for (var property in debtData) {
+          if (debtData.hasOwnProperty(property)) {
+
+            if (debtProprtyIsValid(property)) {
+              debt[property] = debtData[property];
+            } else {
+              throw new Error('newDebt(): ' +
+                  'Invalid property in debtData: ' + property);
+            }
+          }
         }
       }
 
@@ -302,16 +347,33 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
     },
 
     'getDebtInfo' : function getDebtInfo(uid, property) {
+
       if (allDebts[uid]) {
         return allDebts[uid][property];
+      } else {
+        return null;
       }
     },
 
-    'getAllDebtInfo' : function getAllDebtInfo() {
-      return allDebts;
+    'getAllDebtIds' : function getAllDebtIds() {
+
+      var debtIds = [];
+
+      for (var debt in allDebts) {
+        if (allDebts.hasOwnProperty(debt)) {
+          debtIds.push(debt);
+        }
+      }
+
+      return debtIds;
     },
 
     'setDebtInfo' : function setDebtInfo(uid, property, amount) {
+
+      if (!debtProprtyIsValid(property)) {
+        throw new Error('setDebtInfo(): ' +
+            'Invalid property: ' + property);
+      }
 
       if (allDebts[uid]) {
         allDebts[uid][property] = amount;
@@ -338,51 +400,60 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
       return allocationMethod;
     },
 
-    'setAllocationMethod' : function setAllocationMethod() {
-      // TODO
+    'setAllocationMethod' : function setAllocationMethod(method) {
+
+      switch(method) {
+        case allocationMethods.EVEN_SPLIT:
+        case allocationMethods.PRIORITY_FIRST:
+        case allocationMethods.PROPORTIONAL_SPLIT:
+          allocationMethod = method;
+          break;
+        default:
+          throw new Error('setAllocationMethod(): ' +
+              'Invalid method: ' + method);
+      }
     },
 
     'getPrioritizationMethod' : function getPrioritizationMethod() {
       return prioritizationMethod;
     },
 
-    'setPrioritizationMethod' : function setPrioritizationMethod() {
-      // TODO
+    'setPrioritizationMethod' : function setPrioritizationMethod(method) {
+
+      switch(method) {
+        case prioritizationMethods.HIGHEST_APR:
+        case prioritizationMethods.LOWEST_OWED:
+        case prioritizationMethods.CUSTOM:
+          prioritizationMethod = method;
+          break;
+        default:
+          throw new Error('setPrioritizationMethod(): ' +
+              'Invalid method: ' + method);
+      }
     },
 
     'getMonthlyPayments' : function getMonthlyPayments() {
       return monthlyPayments;
     },
 
-    'setMonthlyPayments' : function setMonthlyPayments() {
-      // TODO
-    },
+    'setMonthlyPayments' : function setMonthlyPayments(newMonthlyPayments) {
 
-    // TODO - Cache? Rework?
-    'getTotalAmountOwed' : function getTotalAmountOwed() {
-
-      var totalAmountOwed = 0.0;
-
-      for (var debt in allDebts) {
-        if (allDebts.hasOwnProperty(debt)) {
-          totalAmountOwed += allDebts[debt].amountOwed;
-        }
+      if (newMonthlyPayments < totalMinimumMonthlyPayment) {
+        newMonthlyPayments = totalMinimumMonthlyPayment;
       }
 
+      if (newMonthlyPayments > totalAmountOwed) {
+        newMonthlyPayments = totalAmountOwed;
+      }
+
+      monthlyPayments = newMonthlyPayments;
+    },
+
+    'getTotalAmountOwed' : function getTotalAmountOwed() {
       return totalAmountOwed;
     },
 
-    // TODO - Cache? Rework?
     'getTotalMinimumMonthlyPayment' : function getTotalMinimumMonthlyPayment() {
-
-      var totalMinimumMonthlyPayment = 0.0;
-
-      for (var debt in allDebts) {
-        if (allDebts.hasOwnProperty(debt)) {
-          totalMinimumMonthlyPayment += allDebts[debt].minimumMonthlyPayment;
-        }
-      }
-
       return totalMinimumMonthlyPayment;
     },
 
