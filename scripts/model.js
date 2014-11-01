@@ -2,6 +2,7 @@
 var koratDragonDen = koratDragonDen || {};
 koratDragonDen.debtCalculatorSample = koratDragonDen.debtCalculatorSample || {};
 
+// TODO - Find places where calculations would demand we cap at two decimals
 koratDragonDen.debtCalculatorSample.model = (function model(){
   'use strict';
 
@@ -10,14 +11,17 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
   var prioritizationMethod = 0;
   var monthlyPayments = 0.0;
   var subscribers = [];
+  var payoffTime = undefined;
 
   var Debt = function Debt(uid) {
     this.uid = uid;
   };
   Debt.prototype.apr = 0.0;
+  Debt.prototype.monthlyInterest = 0.0;
   Debt.prototype.amountOwed = 0.0;
   Debt.prototype.minimumMonthlyPayment = 0.0;
 
+  // TODO - Rework this
   var publishDebtUpdates = function publishDebtUpdates(uid, updateType) {
 
     var debtObject;
@@ -38,6 +42,7 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
     }
   };
 
+  // TODO - This and the function below might have combinable code
   var getDebtsSortedByHighestApr = function getDebtsSortedByHighestApr() {
 
     var orderedDebts = [];
@@ -52,46 +57,35 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
     }
 
     orderedDebts.sort(function(a, b) {
-      return a.debtObject.apr - b.debtObject.apr;
+      // b - a results in highest first sorting
+      return b.debtObject.apr - a.debtObject.apr;
     });
 
     return orderedDebts;
   };
 
   var getDebtsSortedByLowestOwed = function getDebtsSortedByLowestOwed() {
-    // TODO
 
-    var unorderedDebts = [];
     var orderedDebts = [];
 
     for (var debt in allDebts) {
       if (allDebts.hasOwnProperty(debt)) {
-        unorderedDebts.push(allDebts[debt].uid);
+        orderedDebts.push({
+          debtObject : allDebts[debt],
+          remainingOwed : allDebts[debt].amountOwed
+        });
       }
     }
 
-    var lowestOwedDebt;
-    while (unorderedDebts.length > 0) {
-
-      lowestOwedDebt = 0;
-
-      for (var i = 1, l = unorderedDebts.length; i < l; i++) {
-        if (allDebts[unorderedDebts[i]].amountOwed < allDebts[unorderedDebts[lowestOwedDebt]].amountOwed) {
-          lowestOwedDebt = i;
-        }
-      }
-
-      orderedDebts.push({
-        debtObject : allDebts[unorderedDebts[lowestOwedDebt]],
-        remainingOwed : allDebts[unorderedDebts[lowestOwedDebt]].amountOwed
-      });
-
-      unorderedDebts.splice(lowestOwedDebt, 1);
-    }
+    orderedDebts.sort(function(a, b) {
+      // a - b results in lowest first sorting
+      return a.debtObject.amountOwed - b.debtObject.amountOwed;
+    });
 
     return orderedDebts;
   };
 
+  // TODO - Rework this? Move it?
   var getMonthlyMinimumForPayoffTime = function getMonthlyMinimumForPayoffTime(orderedDebtsObject) {
 
     var currentMonthlyMinimum = 0.0;
@@ -102,11 +96,9 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
     return currentMonthlyMinimum;
   };
 
-  // TODO - This whole thing is a brainstormy mess. Fix it.
   var calculatePayoffTime = function calculatePayoffTime() {
 
-    var debt, i;
-    var orderedDebts = [];
+    var i, orderedDebts, debt, payment, extra, remaining;
 
     // TODO - Change these to enums
     switch (allocationMethod) {
@@ -130,58 +122,107 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
     var months = 0;
     // TODO - Add stop for amounts that are just absurdly long
     while (orderedDebts.length > 0) {
-      // Calculate interest first, then remove amount
-
+      // Track how many months of paying this will take
       months++;
 
-      var orderedDebtsLength = orderedDebts.length;
-
       // Calculate interest
-      for (i = 0; i < orderedDebtsLength; i++) {
-        // TODO - Cache monthly interest rate
-        orderedDebts[i].remainingOwed *= ( 1.0 + (orderedDebts[i].debtObject.apr / 1200.0) );
+      // TODO - Cap this at two decimals
+      for (i = 0; i < orderedDebts.length; i++) {
+        debt = orderedDebts[i];
+        debt.remainingOwed *= debt.monthlyInterest;
       }
 
       // Determine amount over monthly minimum, if any
-      var currentMonthlyMinimum = getMonthlyMinimumForPayoffTime(orderedDebts);
-      var amountOverMonthlyMinimum = Math.max(monthlyPayments - currentMonthlyMinimum, 0.0);
+      extra = Math.max(monthlyPayments - getMonthlyMinimumForPayoffTime(orderedDebts), 0.0);
+
+      // Handle minimum monthly payments first
+      // Looping backwards makes array object deletion logic cleaner
+      for (i = orderedDebts.length; i--; ) {
+        debt = orderedDebts[i];
+
+        payment = debt.debtObject.minimumMonthlyPayment;
+        remaining = debt.remainingOwed;
+
+        if (remaining < payment) {
+          extra += (payment - remaining);
+          delete orderedDebts[i];
+        } else {
+          debt.remainingOwed -= payment;
+        }
+      }
 
       // TODO - Change these to enums
       switch (prioritizationMethod) {
 
         case 'evenSplit':
-          // TODO - Factor in when this is reset mid-calculation because of a debt(s) being paid off
-          var evenSplitExtra = amountOverMonthlyMinimum / orderedDebtsLength;
 
-          for (i = 0; i < orderedDebtsLength; i++) {
-            // TODO - Check if this subtracts more than owed
-            orderedDebts[i].remainingOwed -= (evenSplitExtra + orderedDebts[i].debtObject.minimumMonthlyPayment);
+          while (extra > 0.0 && orderedDebts.length) {
+            payment = extra / orderedDebts.length;
+            extra = 0.0;
+            // Looping backwards makes array object deletion logic cleaner
+            for (i = orderedDebts.length; i--; ) {
+              debt = orderedDebts[i];
+              remaining = debt.remainingOwed;
+
+              if (remaining < payment) {
+                extra += (payment - remaining);
+                delete orderedDebts[i];
+              } else {
+                debt.remainingOwed -= payment;
+              }
+            }
           }
           break;
 
         case 'priorityFirst':
-          var remainingAmountOverMonthlyMinimum = amountOverMonthlyMinimum;
-          for (i = 0; i < orderedDebtsLength; i++) {
-            // TODO - Check if this subtracts more than owed
-            orderedDebts[i].remainingOwed -= (remainingAmountOverMonthlyMinimum + orderedDebts[i].debtObject.minimumMonthlyPayment);
-            remainingAmountOverMonthlyMinimum -= remainingAmountOverMonthlyMinimum;
+
+          while (extra > 0.0 && orderedDebts.length) {
+            debt = orderedDebts[i];
+            remaining = debt.remainingOwed;
+
+            if (remaining < extra) {
+              extra -= remaining;
+              delete orderedDebts[i];
+            } else {
+              debt.remainingOwed -= extra;
+              extra = 0.0;
+            }
           }
           break;
 
         case 'proportionalSplit':
-          // If proportional split
-          var totalAmountRemaining = 0.0;
-          // TODO - This is an array
-          for (i = 0; i < orderedDebtsLength; i++) {
-            totalAmountRemaining += orderedDebts[i].remainingOwed;
-          }
 
-          evenSplitExtra = amountOverMonthlyMinimum / orderedDebtsLength;
-          // TODO - Factor in when this is reset mid-calculation because of a debt(s) being paid off
+          while (extra > 0.0 && orderedDebts.length) {
 
-          for (i = 0; i < orderedDebtsLength; i++) {
-            // TODO - Check if this subtracts more than owed
-            orderedDebts[i].remainingOwed -= ((amountOverMonthlyMinimum * (orderedDebts[i].remainingOwed/totalAmountRemaining)) + orderedDebts[i].debtObject.minimumMonthlyPayment);
+            var fundsAvailableTotal = extra;
+            var fundsAvailableRemaining = extra;
+
+            var totalAmountRemaining = 0.0;
+            for (i = 0; i < orderedDebts.length; i++) {
+              totalAmountRemaining += orderedDebts[i].remainingOwed;
+            }
+
+            extra = 0.0;
+            // Looping backwards makes array object deletion logic cleaner
+            for (i = orderedDebts.length; i--; ) {
+              debt = orderedDebts[i];
+              remaining = debt.remainingOwed;
+
+              payment = fundsAvailableTotal * (remaining/totalAmountRemaining);
+              if (payment > fundsAvailableRemaining) {
+                payment = fundsAvailableRemaining;
+                fundsAvailableRemaining = 0.0;
+              } else {
+                fundsAvailableRemaining -= payment;
+              }
+
+              if (remaining < payment) {
+                extra += (payment - remaining);
+                delete orderedDebts[i];
+              } else {
+                debt.remainingOwed -= payment;
+              }
+            }
           }
           break;
 
@@ -189,6 +230,7 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
           // TODO - How do we want to handle this?
       }
     }
+    // TODO - return and/or set something here
   };
 
   function getNewUid() {
@@ -197,7 +239,7 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
   }
 
   return {
-    'subscribeToDebtUpdates' : function subscribeToDebtUpdates(callback) {
+    'subscribeToDataUpdates' : function subscribeToDataUpdates(callback) {
 
       // Sanity check. Don't let the same callback subscribe twice.
       for (var i = 0; i < subscribers.length; i++) {
@@ -209,8 +251,8 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
       subscribers.push(callback);
     },
 
-    'unsubscribeFromDebtUpdates' :
-        function unsubscribeFromDebtUpdates(callback) {
+    'unsubscribeFromDataUpdates' :
+        function unsubscribeFromDataUpdates(callback) {
 
       for (var i = 0; i < subscribers.length; i++) {
         if (subscribers[i] === callback) {
@@ -225,6 +267,7 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
       var uid = getNewUid();
       var debt = new Debt(uid);
 
+      // TODO - Clean this up?
       if (debtData !== undefined) {
         if (debtData.apr !== undefined){
           debt.apr = debtData.apr;
@@ -242,13 +285,24 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
       publishDebtUpdates(uid, 'add');
     },
 
-    'updateDebtInfo' : function updateDebtInfo(uid, property, amount) {
+    'setDebtInfo' : function setDebtInfo(uid, property, amount) {
 
       if (allDebts[uid]) {
         allDebts[uid][property] = amount;
+
+        // Cache estimated monthly interest rate based on apr
+        if (property === 'apr') {
+          allDebts[uid].monthlyInterest = ( 1.0 + (amount / 1200.0) );
+        }
       }
 
       publishDebtUpdates(uid, 'update');
+    },
+
+    'getDebtInfo' : function getDebtInfo(uid, property) {
+      if (allDebts[uid]) {
+        return allDebts[uid][property];
+      }
     },
 
     'deleteDebt' : function deleteDebt(uid, test) {
@@ -260,6 +314,11 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
       publishDebtUpdates(uid, 'delete');
     },
 
+    'getAllDebtInfo' : function getAllDebtInfo() {
+      return allDebts;
+    },
+
+    // TODO - Cache? Rework?
     'getTotalAmountOwed' : function getTotalAmountOwed() {
 
       var totalAmountOwed = 0.0;
@@ -273,6 +332,7 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
       return totalAmountOwed;
     },
 
+    // TODO - Cache? Rework?
     'getTotalMinimumMonthlyPayment' : function getTotalMinimumMonthlyPayment() {
 
       var totalMinimumMonthlyPayment = 0.0;
