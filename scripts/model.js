@@ -10,8 +10,22 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
   var allocationMethod = 0;
   var prioritizationMethod = 0;
   var monthlyPayments = 0.0;
-  var subscribers = [];
+
   var payoffTime = undefined;
+
+  var subscribers = [];
+
+  var prioritizationMethods = {
+    'HIGHEST_APR' : 0,
+    'LOWEST_OWED' : 1,
+    'CUSTOM' : 2
+  };
+
+  var allocationMethods = {
+    'EVEN_SPLIT' : 0,
+    'PRIORITY_FIRST' : 1,
+    'PROPORTIONAL_SPLIT' : 2
+  };
 
   var Debt = function Debt(uid) {
     this.uid = uid;
@@ -101,22 +115,23 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
     var i, orderedDebts, debt, payment, extra, remaining;
 
     // TODO - Change these to enums
-    switch (allocationMethod) {
+    switch (prioritizationMethod) {
 
-      case 'highestApr':
+      case prioritizationMethods.HIGHEST_APR:
         orderedDebts = getDebtsSortedByHighestApr();
         break;
 
-      case 'lowestOwed':
+      case prioritizationMethods.LOWEST_OWED:
         orderedDebts = getDebtsSortedByLowestOwed();
         break;
 
-      case 'custom':
+      case prioritizationMethods.CUSTOM:
         // TODO - If custom priority, use customPriority
         break;
 
       default:
-        // TODO - How do we want to handle this?
+        throw new Error('calculatePayoffTime(): ' +
+            'Bad prioritizationMethod: ' + prioritizationMethod);
     }
 
     var months = 0;
@@ -151,10 +166,10 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
         }
       }
 
-      // TODO - Change these to enums
-      switch (prioritizationMethod) {
+      // TODO - See if there's parts where these can be combined or otherwise
+      switch (allocationMethod) {
 
-        case 'evenSplit':
+        case allocationMethods.EVEN_SPLIT:
 
           while (extra > 0.0 && orderedDebts.length) {
             payment = extra / orderedDebts.length;
@@ -174,7 +189,7 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
           }
           break;
 
-        case 'priorityFirst':
+        case allocationMethods.PRIORITY_FIRST:
 
           while (extra > 0.0 && orderedDebts.length) {
             debt = orderedDebts[i];
@@ -190,7 +205,7 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
           }
           break;
 
-        case 'proportionalSplit':
+        case allocationMethods.PROPORTIONAL_SPLIT:
 
           while (extra > 0.0 && orderedDebts.length) {
 
@@ -227,10 +242,11 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
           break;
 
         default:
-          // TODO - How do we want to handle this?
+          throw new Error('calculatePayoffTime(): ' +
+              'Bad allocationMethod: ' + allocationMethod);
       }
     }
-    // TODO - return and/or set something here
+    payoffTime = months;
   };
 
   function getNewUid() {
@@ -285,6 +301,16 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
       publishDebtUpdates(uid, 'add');
     },
 
+    'getDebtInfo' : function getDebtInfo(uid, property) {
+      if (allDebts[uid]) {
+        return allDebts[uid][property];
+      }
+    },
+
+    'getAllDebtInfo' : function getAllDebtInfo() {
+      return allDebts;
+    },
+
     'setDebtInfo' : function setDebtInfo(uid, property, amount) {
 
       if (allDebts[uid]) {
@@ -299,12 +325,6 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
       publishDebtUpdates(uid, 'update');
     },
 
-    'getDebtInfo' : function getDebtInfo(uid, property) {
-      if (allDebts[uid]) {
-        return allDebts[uid][property];
-      }
-    },
-
     'deleteDebt' : function deleteDebt(uid, test) {
 
       if (allDebts[uid]) {
@@ -314,8 +334,28 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
       publishDebtUpdates(uid, 'delete');
     },
 
-    'getAllDebtInfo' : function getAllDebtInfo() {
-      return allDebts;
+    'getAllocationMethod' : function getAllocationMethod() {
+      return allocationMethod;
+    },
+
+    'setAllocationMethod' : function setAllocationMethod() {
+      // TODO
+    },
+
+    'getPrioritizationMethod' : function getPrioritizationMethod() {
+      return prioritizationMethod;
+    },
+
+    'setPrioritizationMethod' : function setPrioritizationMethod() {
+      // TODO
+    },
+
+    'getMonthlyPayments' : function getMonthlyPayments() {
+      return monthlyPayments;
+    },
+
+    'setMonthlyPayments' : function setMonthlyPayments() {
+      // TODO
     },
 
     // TODO - Cache? Rework?
@@ -344,6 +384,10 @@ koratDragonDen.debtCalculatorSample.model = (function model(){
       }
 
       return totalMinimumMonthlyPayment;
+    },
+
+    'getPayoffTime' : function getPayoffTime() {
+      return payoffTime;
     }
   };
 
