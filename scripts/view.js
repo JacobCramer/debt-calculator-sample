@@ -1,6 +1,6 @@
 
-var koratDragonDen = {};
-koratDragonDen.debtCalculatorSample = {};
+var koratDragonDen = koratDragonDen || {};
+koratDragonDen.debtCalculatorSample = koratDragonDen.debtCalculatorSample || {};
 koratDragonDen.debtCalculatorSample.view = (function view(){
   'use strict';
 

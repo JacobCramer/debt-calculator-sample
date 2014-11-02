@@ -13,8 +13,6 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
   };
 
   var allDebts = {};
-  var allocationMethod = 0;
-  var prioritizationMethod = 0;
   var monthlyPayments = 0.0;
   var customDebtOrder = {};
 
@@ -31,12 +29,14 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
     'LOWEST_OWED' : 'LOWEST_OWED',
     'CUSTOM' : 'CUSTOM'
   };
+  var prioritizationMethod = prioritizationMethods.HIGHEST_APR;
 
   var allocationMethods = {
     'EVEN_SPLIT' : 'EVEN_SPLIT',
     'PRIORITY_FIRST' : 'PRIORITY_FIRST',
     'PROPORTIONAL_SPLIT' : 'PROPORTIONAL_SPLIT'
   };
+  var allocationMethod = allocationMethods.EVEN_SPLIT;
 
   var publishTypes = {
     'ADD_DEBT' : 'ADD_DEBT',
@@ -54,7 +54,7 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
     this.uid = uid;
   };
   Debt.prototype.apr = 0.0;
-  Debt.prototype.monthlyInterest = 0.0;
+  Debt.prototype.monthlyInterest = 1.0;
   Debt.prototype.amountOwed = 0.0;
   Debt.prototype.minimumMonthlyPayment = 0.0;
 
@@ -74,9 +74,9 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
 
         var debtObject = allDebts[debt];
 
-        if (debtObject.hasOwnProperty('apr') ||
-            debtObject.hasOwnProperty('amountOwed') ||
-            debtObject.hasOwnProperty('minimumMonthlyPayment')) {
+        if (!debtObject.hasOwnProperty('apr') &&
+            !debtObject.hasOwnProperty('amountOwed') &&
+            !debtObject.hasOwnProperty('minimumMonthlyPayment')) {
           return true;
         }
       }
@@ -142,7 +142,7 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
     }
 
     // If no fully empty debt exists, create one
-    if (!emptyDebtExists) {
+    if (!emptyDebtExists()) {
       newDebt();
     }
   };
@@ -151,6 +151,11 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
     calculateTotalAmountOwed();
     calculateTotalMinimumMonthlyPayment();
     calculatePayoffTime();
+
+    // If no fully empty debt exists, create one
+    if (!emptyDebtExists()) {
+      newDebt();
+    }
   };
 
   var propagateAllocationChange = function propagateAllocationChange() {
@@ -344,7 +349,7 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
       // Calculate interest
       for (i = 0; i < orderedDebts.length; i++) {
         debt = orderedDebts[i];
-        debt.remainingOwed *= debt.monthlyInterest;
+        debt.remainingOwed *= debt.debtObject.monthlyInterest;
         debt.remainingOwed = roundToTwoDecimals(debt.remainingOwed);
       }
 
@@ -365,7 +370,7 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
 
         if (remaining < payment) {
           surplus += (payment - remaining);
-          delete orderedDebts[i];
+          orderedDebts.splice(i, 1);
         } else {
           debt.remainingOwed -= payment;
         }
@@ -450,7 +455,7 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
     // Looping backwards makes array object deletion logic cleaner
     for (var i = debts.length; i--; ) {
       if (debts[i].remainingOwed <= 0.0) {
-        delete debts[i];
+        debts.splice(i, 1);
       }
     }
   };
@@ -460,7 +465,7 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
     var limit = 10000000;
 
     // There's no reason this should ever happen. Ever. But just in case...
-    while (counter > limit) {
+    while (counter < limit) {
       var newUid = Math.random().toString(36).substr(2,9);
       if (!usedUids.hasOwnProperty(newUid)) {
         usedUids[newUid] = true;
@@ -476,6 +481,9 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
   var roundToTwoDecimals = function roundToTwoDecimals(num) {
       return +(Math.round(num + 'e+2')  + 'e-2');
   };
+
+  // Initial setup
+  newDebt();
 
   return {
     'subscribeToDataUpdates' : function subscribeToDataUpdates(callback) {
@@ -522,7 +530,11 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
     'getDebtInfo' : function getDebtInfo(uid, property) {
 
       if (allDebts[uid]) {
-        return allDebts[uid][property];
+        if (allDebts[uid].hasOwnProperty(property)) {
+          return allDebts[uid][property];
+        } else {
+          return undefined;
+        }
       } else {
         return null;
       }
@@ -649,7 +661,21 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
     },
 
     'getCustomDebtOrder' : function getCustomDebtOrder() {
-      return customDebtOrder;
+
+      var sortedDebtArray = [];
+
+      for (var debt in allDebts) {
+        if (allDebts.hasOwnProperty(debt)) {
+          sortedDebtArray.push(allDebts[debt].uid);
+        }
+      }
+
+      sortedDebtArray.sort(function customOrderSort(a, b) {
+        // a - b results in lowest first sorting
+        return customDebtOrder[a] - customDebtOrder[b];
+      });
+
+      return sortedDebtArray;
     },
 
     'setCustomDebtOrder' : function setCustomDebtOrder(requestedOrder) {
@@ -691,7 +717,7 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
       // Ideally, this will never be necessary, but we're being forgiving here
       var missedUids = [];
       for (uid in availableUids) {
-        if (availableUids.hasOwnProperty(uid) && availableUids[debt]) {
+        if (availableUids.hasOwnProperty(uid) && availableUids[uid]) {
           missedUids[previousOrder[uid]] = uid;
           availableUids[uid] = false;
         }
