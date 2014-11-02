@@ -4,6 +4,9 @@ koratDragonDen.debtCalculatorSample = koratDragonDen.debtCalculatorSample || {};
 
 // TODO - Rename/shorten functions and variables
 // TODO - More code cleanup; some things aren't where they should be
+// TODO - Reorder functions?
+// TODO - Standardize publish events?
+// TODO - Check totalOwed < minimumMonthly logic
 koratDragonDen.debtCalculatorSample.model = (function model(undefined){
   'use strict';
 
@@ -57,6 +60,10 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
   Debt.prototype.monthlyInterest = 1.0;
   Debt.prototype.amountOwed = 0.0;
   Debt.prototype.minimumMonthlyPayment = 0.0;
+
+  var init = function init(){
+    newDebt();
+  };
 
   var newDebt = function newDebt() {
 
@@ -226,21 +233,9 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
     });
 
     // Ensure this is a valid publish type
-    switch(publishType) {
-      case publishTypes.ADD_DEBT:
-      case publishTypes.UPDATE_DEBT:
-      case publishTypes.DELETE_DEBT:
-      case publishTypes.ALLOCATION_METHOD:
-      case publishTypes.PRIORITIZATION_METHOD:
-      case publishTypes.MONTHLY_PAYMENTS:
-      case publishTypes.TOTAL_AMOUNT_OWED:
-      case publishTypes.TOTAL_MINIMUM_MONTHLY_PAYMENT:
-      case publishTypes.PAYOFF_TIME:
-        break;
-
-      default:
-        throw new Error('publish(): ' +
-            'Invalid publishType: ' + publishType);
+    if (!publishTypes.hasOwnProperty(publishType)) {
+      throw new Error('publish(): ' +
+          'Invalid publishType: ' + publishType);
     }
 
     for (var i = 0; i < subscribers.length; i++) {
@@ -483,7 +478,7 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
   };
 
   // Initial setup
-  newDebt();
+  init();
 
   return {
     'subscribeToDataUpdates' : function subscribeToDataUpdates(callback) {
