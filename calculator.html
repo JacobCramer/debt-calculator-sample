@@ -6,43 +6,14 @@
 </head>
 <body>
 
-<div id="debtProgram" class="noJavaScript">
+<!-- The content of this div is dynamically created by JavaScript when the user loads the page; formatting tends to get ugly with auto-generated code. -->
+<div id="debtContainer">
 
-  <p id="javaScriptNotification">Please enable JavaScript :)</p>
+  <p>Please enable JavaScript :)</p>
 
-  <table id="debtTable">
-    <tr>
-      <th>Delete Entry</th>
-      <th>Amount Owed</th>
-      <th>APR</th>
-      <th>Minimum Monthly Payment</th>
-    </tr>
-  </table>
-
-  <div id="debtAllocation">
-    <p>How to allocate amount over monthly minimum:</p>
-    <select id="debtAllocationSelect">
-      <option>Pay to highest priority debt</option>
-      <option>Split evenly between all debts</option>
-      <option>Split proportionally by amount owed</option>
-    </select>
-  </div>
-
-  <div id="debtPrioritization">
-    <p>How to prioritize debts:</p>
-    <select id="debtPrioritizationSelect">
-      <option>Highest APR first</option>
-      <option>Lowest amount owed first</option>
-      <option>Use order entered by user above</option>
-    </select>
-  </div>
-
-  <div id="monthlyPayments">
-    <input type="range" name="points" min="0" max="100">
-  </div>
 </div>
 
-<!--Script files are split based on the MVP (Model View Presenter) design pattern. This is arguably overkill for a script of this size, but has been done for the sake of demonstrating the concept.-->
+<!--Script files are split based on the MVP (Model View Presenter) design pattern. This is arguably overkill for a script of this size, but has been done for the sake of demonstrating the concept. (Likewise, these three files would be combined and minified in a production environment)-->
 <script src="scripts/model.js"></script>
 <script src="scripts/view.js"></script>
 <script src="scripts/presenter.js"></script>
