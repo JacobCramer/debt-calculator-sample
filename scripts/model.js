@@ -1,13 +1,13 @@
 
-var koratDragonDen = koratDragonDen || {};
-koratDragonDen.debtCalculatorSample = koratDragonDen.debtCalculatorSample || {};
+// JSHint directive
+/* global define */
 
 // TODO - Rename/shorten functions and variables
 // TODO - More code cleanup; some things aren't where they should be
 // TODO - Reorder functions?
 // TODO - Standardize publish events?
 // TODO - Check totalOwed < minimumMonthly logic
-koratDragonDen.debtCalculatorSample.model = (function model(undefined){
+define((function model(undefined){
   'use strict';
 
   var config = {
@@ -330,6 +330,12 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
 
 
   var calculatePayoffTime = function calculatePayoffTime() {
+
+    // Don't even bother calculating if we're not paying
+    if (monthlyPayments === 0) {
+      payoffTime = 0;
+      publish(publishTypes.PAYOFF_TIME, {'months':0});
+    }
 
     var i, orderedDebts, debt, payment, surplus, remaining;
 
@@ -753,6 +759,6 @@ koratDragonDen.debtCalculatorSample.model = (function model(undefined){
     }
   };
 
-}());
+}()));
 
 

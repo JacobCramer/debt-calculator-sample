@@ -1,12 +1,13 @@
 
-var koratDragonDen = koratDragonDen || {};
-koratDragonDen.debtCalculatorSample = koratDragonDen.debtCalculatorSample || {};
+// JSHint directive
+/* global define */
 
 // TODO - Rename functions/variables?
 // TODO - Add a drag functionality?
 // TODO - Add disclaimer?
 // TODO - Add some sort of loading screen?
-koratDragonDen.debtCalculatorSample.view = (function view(undefined){
+// TODO - Hide priority select if not in use?
+define((function view(undefined){
   'use strict';
 
   var config = {
@@ -41,6 +42,7 @@ koratDragonDen.debtCalculatorSample.view = (function view(undefined){
 
     var debtTable = document.createElement('table');
     documentFragment.appendChild(debtTable);
+    domCache.debtTable = debtTable;
 
       var headerTr = document.createElement('tr');
       debtTable.appendChild(headerTr);
@@ -118,11 +120,16 @@ koratDragonDen.debtCalculatorSample.view = (function view(undefined){
     var paymentsDiv = document.createElement('div');
     documentFragment.appendChild(paymentsDiv);
 
+      var paymentP = document.createElement('p');
+      paymentP.innerHTML = 'How much to pay every month:';
+      paymentsDiv.appendChild(paymentP);
+
       var paymentInput = document.createElement('input');
-      paymentInput.type = 'range';
+      paymentInput.type = 'number';
+      paymentInput.placeholder = 'Monthly Payments';
       paymentInput.min = '0';
-      paymentInput.max = '100';
-      paymentInput.addEventListener('change', requestSetMonthlyPayment);
+      paymentInput.step = 'any';
+      paymentInput.addEventListener('input', requestSetMonthlyPayment);
       paymentsDiv.appendChild(paymentInput);
       domCache.paymentInput = paymentInput;
 
@@ -130,7 +137,7 @@ koratDragonDen.debtCalculatorSample.view = (function view(undefined){
     documentFragment.appendChild(payoffTimeDiv);
 
       var payoffMessageP = document.createElement('p');
-      payoffMessageP.innerHTML = 'Please enter debts above.';
+      payoffMessageP.innerHTML = '';
       payoffTimeDiv.appendChild(payoffMessageP);
       domCache.payoffMessageP = payoffMessageP;
 
@@ -220,11 +227,11 @@ koratDragonDen.debtCalculatorSample.view = (function view(undefined){
 
   var newDebtInput = function newDebtInput(uid) {
 
-    domCache[uid] = {};
+    var debtCache = domCache.debts[uid] = {};
 
     var tr = document.createElement('tr');
     tr.id = uid;
-    domCache[uid].container = tr;
+    debtCache.container = tr;
 
     var tdDelete = document.createElement('td');
     var buttonDelete = document.createElement('button');
@@ -233,45 +240,53 @@ koratDragonDen.debtCalculatorSample.view = (function view(undefined){
     buttonDelete.addEventListener('click', requestSetDeleteDebt);
     tdDelete.appendChild(buttonDelete);
 
-    var tdAPR = document.createElement('td');
-    var inputAPR = document.createElement('input');
-    inputAPR.type = 'number';
-    inputAPR.placeholder = 'APR';
-    inputAPR.min = '0';
-    inputAPR.dataset.uid = uid;
-    inputAPR.dataset.property = 'apr';
-    inputAPR.addEventListener('input', requestSetDebtInfo);
-    tdAPR.appendChild(inputAPR);
-    domCache[uid].aprInput = inputAPR;
-
     var tdAmountOwed = document.createElement('td');
     var inputAmountOwed = document.createElement('input');
     inputAmountOwed.type = 'number';
     inputAmountOwed.placeholder = 'Amount Owed';
     inputAmountOwed.min = '0';
+    inputAmountOwed.step = 'any';
     inputAmountOwed.dataset.uid = uid;
     inputAmountOwed.dataset.property = 'amountOwed';
     inputAmountOwed.addEventListener('input', requestSetDebtInfo);
     tdAmountOwed.appendChild(inputAmountOwed);
-    domCache[uid].amountOwedInput = inputAmountOwed;
+    debtCache.amountOwedInput = inputAmountOwed;
+
+    var tdAPR = document.createElement('td');
+    var inputAPR = document.createElement('input');
+    inputAPR.type = 'number';
+    inputAPR.placeholder = 'APR';
+    inputAPR.min = '0';
+    inputAPR.step = 'any';
+    inputAPR.dataset.uid = uid;
+    inputAPR.dataset.property = 'apr';
+    inputAPR.addEventListener('input', requestSetDebtInfo);
+    tdAPR.appendChild(inputAPR);
+    debtCache.aprInput = inputAPR;
 
     var tdMinimumMonthly = document.createElement('td');
     var inputMinimumMonthly = document.createElement('input');
     inputMinimumMonthly.type = 'number';
     inputMinimumMonthly.placeholder = 'Minimum Monthly Payment';
     inputMinimumMonthly.min = '0';
+    inputMinimumMonthly.step = 'any';
     inputMinimumMonthly.dataset.uid = uid;
     inputMinimumMonthly.dataset.property = 'minimumMonthly';
     inputMinimumMonthly.addEventListener('input', requestSetDebtInfo);
     tdMinimumMonthly.appendChild(inputMinimumMonthly);
-    domCache[uid].monthlyMinimumInput = inputMinimumMonthly;
+    debtCache.monthlyMinimumInput = inputMinimumMonthly;
 
     tr.appendChild(tdDelete);
-    tr.appendChild(tdAPR);
     tr.appendChild(tdAmountOwed);
+    tr.appendChild(tdAPR);
     tr.appendChild(tdMinimumMonthly);
 
-    document.getElementById('debtTable').appendChild(tr);
+    if (domCache.debtTable) {
+      domCache.debtTable.appendChild(tr);
+    } else {
+      throw new Error('newDebtInput(): ' +
+        'debtTable DOM element mysteriously vanished!');
+    }
   };
 
   // Initial setup
@@ -314,19 +329,19 @@ koratDragonDen.debtCalculatorSample.view = (function view(undefined){
 
       var elem;
 
-      if (domCache[uid]) {
+      if (domCache.debts[uid]) {
 
         switch(property) {
           case 'apr':
-            elem = domCache[uid].aprInput;
+            elem = domCache.debts[uid].aprInput;
             break;
 
           case 'monthly':
-            elem = domCache[uid].monthlyMinimumInput;
+            elem = domCache.debts[uid].monthlyMinimumInput;
             break;
 
           case 'owed':
-            elem = domCache[uid].amountOwedInput;
+            elem = domCache.debts[uid].amountOwedInput;
             break;
 
           default:
@@ -340,11 +355,24 @@ koratDragonDen.debtCalculatorSample.view = (function view(undefined){
 
     'deleteDebt' : function deleteDebt(uid) {
 
-      if (domCache[uid]) {
-        var elem = domCache[uid].container;
+      if (domCache.debts[uid]) {
+        var elem = domCache.debts[uid].container;
         elem.parentNode.removeChild(elem);
-        delete domCache[uid];
+        delete domCache.debts[uid];
       }
+    },
+
+    'getAllDebts' : function getAllDebts() {
+
+      var allDebts = [];
+
+      for (var debt in domCache.debts) {
+        if (domCache.debts.hasOwnProperty(debt)) {
+          allDebts.push(debt);
+        }
+      }
+
+      return allDebts;
     },
 
     'setAllocationMethod' : function setAllocationMethod(method) {
@@ -402,21 +430,23 @@ koratDragonDen.debtCalculatorSample.view = (function view(undefined){
 
       // TODO - Do we need to protect against illogical settings?
       if (domCache.paymentInput) {
-        domCache.paymentInput.value = amount;
+        if (amount === 0) {
+          domCache.paymentInput.value = undefined;
+        } else {
+          domCache.paymentInput.value = amount;
+        }
       }
     },
 
     'setTotalAmountOwed' : function setTotalAmountOwed(amount) {
+      // We aren't actually doing anything with this right now
 
+      /*
       if (typeof amount !== 'number' || amount < 0.0) {
         throw new Error('setTotalAmountOwed(): ' +
             'Invalid amount: ' + amount);
       }
-
-      // Set the upper limit on the slider
-      if (domCache.paymentInput) {
-        domCache.paymentInput.max = amount;
-      }
+      */
     },
 
     'setTotalMinimumMonthlyPayment' : function setTotalMinimumMonthlyPayment(amount) {
@@ -426,7 +456,7 @@ koratDragonDen.debtCalculatorSample.view = (function view(undefined){
             'Invalid amount: ' + amount);
       }
 
-      // Set the lower limit on the slider
+      // Set the lower limit on monthly payments
       if (domCache.paymentInput) {
         domCache.paymentInput.min = amount;
       }
@@ -434,19 +464,47 @@ koratDragonDen.debtCalculatorSample.view = (function view(undefined){
 
     'setPayoffTime' : function setPayoffTime(months) {
 
-      if (typeof months !== 'number' || months < 0.0) {
+      if ((typeof months !== 'number' &&
+          typeof months !== 'undefined') ||
+          months < 0) {
         throw new Error('setPayoffTime(): ' +
             'Invalid months: ' + months);
       }
 
-      // TODO - Make better good grammars
+      var payments;
+
+      if (domCache.paymentInput) {
+        payments = Number(domCache.paymentInput.value);
+      }
+
       if (domCache.payoffMessageP) {
-        domCache.payoffMessageP.innerHTML = 'It will take roughly ' +
-            months + ' months for you to pay off all your debts.';
+
+        if (typeof months === 'undefined' || payments === 0) {
+          domCache.payoffMessageP.innerHTML = '';
+
+        } else if (months === 0) {
+          domCache.payoffMessageP.innerHTML = '';
+
+        } else if (months === 1) {
+          domCache.payoffMessageP.innerHTML = 'By paying ' +
+              payments.toFixed(2) + ' every month, it will take roughly ' +
+            '1 month for you to pay off all of your debts.';
+
+        } else if (months === 1200) {
+          domCache.payoffMessageP.innerHTML = 'By paying ' +
+              payments.toFixed(2) + ' every month, it will take over ' +
+               '100 years for you to pay off all of your debts! ' +
+               'You should consider making larger payments.';
+
+        } else {
+          domCache.payoffMessageP.innerHTML = 'By paying ' +
+              payments.toFixed(2) + ' every month, it will take roughly ' +
+              months + ' months for you to pay off all of your debts.';
+        }
       }
     }
   };
-}());
+}()));
 
 
 
