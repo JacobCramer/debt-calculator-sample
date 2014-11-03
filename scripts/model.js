@@ -213,10 +213,6 @@ define((function model(undefined){
       requestedMonthlyPayments = totalMinimumMonthlyPayment;
     }
 
-    if (requestedMonthlyPayments > totalAmountOwed) {
-      requestedMonthlyPayments = totalAmountOwed;
-    }
-
     return requestedMonthlyPayments;
   };
 
