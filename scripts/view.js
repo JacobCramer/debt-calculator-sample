@@ -58,6 +58,27 @@ define((function view(undefined){
         monthlyTR.innerHTML = 'Minimum Monthly Payment';
         headerTr.appendChild(monthlyTR);
 
+    var totalsDiv = document.createElement('div');
+    documentFragment.appendChild(totalsDiv);
+
+      var totalOwedP = document.createElement('p');
+      totalOwedP.innerHTML = 'Total owed: ';
+      totalsDiv.appendChild(totalOwedP);
+
+        var totalOwedSpan = document.createElement('span');
+        totalOwedSpan.innerHTML = '0.00';
+        totalOwedP.appendChild(totalOwedSpan);
+        domCache.totalOwedSpan = totalOwedSpan;
+
+      var totalMinimumP = document.createElement('p');
+      totalMinimumP.innerHTML = 'Total minimum monthly payment: ';
+      totalsDiv.appendChild(totalMinimumP);
+
+        var totalMinimumSpan = document.createElement('span');
+        totalMinimumSpan.innerHTML = '0.00';
+        totalMinimumP.appendChild(totalMinimumSpan);
+        domCache.totalMinimumSpan = totalMinimumSpan;
+
     var allocationDiv = document.createElement('div');
     documentFragment.appendChild(allocationDiv);
 
@@ -445,12 +466,14 @@ define((function view(undefined){
     'setTotalAmountOwed' : function setTotalAmountOwed(amount) {
       // We aren't actually doing anything with this right now
 
-      /*
       if (typeof amount !== 'number' || amount < 0.0) {
         throw new Error('setTotalAmountOwed(): ' +
             'Invalid amount: ' + amount);
       }
-      */
+
+      if (domCache.totalOwedSpan) {
+        domCache.totalOwedSpan.innerHTML = amount.toFixed(2);
+      }
     },
 
     'setTotalMinimumMonthlyPayment' : function setTotalMinimumMonthlyPayment(amount) {
@@ -463,6 +486,10 @@ define((function view(undefined){
       // Set the lower limit on monthly payments
       if (domCache.paymentInput) {
         domCache.paymentInput.min = amount;
+      }
+
+      if (domCache.totalMinimumSpan) {
+        domCache.totalMinimumSpan.innerHTML = amount.toFixed(2);
       }
     },
 
