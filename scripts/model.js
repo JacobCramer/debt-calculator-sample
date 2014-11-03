@@ -326,6 +326,7 @@ define((function model(undefined){
     if (monthlyPayments === 0) {
       payoffTime = 0;
       publish(publishTypes.PAYOFF_TIME, {'months':0});
+      return;
     }
 
     var i, orderedDebts, debt, payment, surplus, remaining;
