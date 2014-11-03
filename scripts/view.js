@@ -483,11 +483,6 @@ define((function view(undefined){
             'Invalid amount: ' + amount);
       }
 
-      // Set the lower limit on monthly payments
-      if (domCache.paymentInput) {
-        domCache.paymentInput.min = amount;
-      }
-
       if (domCache.totalMinimumSpan) {
         domCache.totalMinimumSpan.innerHTML = amount.toFixed(2);
       }
@@ -497,15 +492,19 @@ define((function view(undefined){
 
       if ((typeof months !== 'number' &&
           typeof months !== 'undefined') ||
-          months < 0) {
+          months < -1) {
         throw new Error('setPayoffTime(): ' +
             'Invalid months: ' + months);
       }
 
-      var payments;
+      var payments, minimumPayment;
 
       if (domCache.paymentInput) {
         payments = Number(domCache.paymentInput.value);
+      }
+
+      if (domCache.totalMinimumSpan) {
+        minimumPayment = domCache.totalMinimumSpan.innerHTML;
       }
 
       if (domCache.payoffMessageP) {
@@ -516,21 +515,43 @@ define((function view(undefined){
         } else if (months === 0) {
           domCache.payoffMessageP.innerHTML = '';
 
-        } else if (months === 1) {
-          domCache.payoffMessageP.innerHTML = 'By paying ' +
-              payments.toFixed(2) + ' every month, it will take roughly ' +
-            '1 month for you to pay off all of your debts.';
+        } else if (months === -1 && minimumPayment !== '') {
+          domCache.payoffMessageP.innerHTML = 'Be sure to enter an amount ' +
+              'at least as high as the total minimum monthly payment of ' +
+              minimumPayment + '.';
 
         } else if (months === 1200) {
           domCache.payoffMessageP.innerHTML = 'By paying ' +
               payments.toFixed(2) + ' every month, it will take over ' +
-               '100 years for you to pay off all of your debts! ' +
-               'You should consider making larger payments.';
+               '100 years to pay off all of your debts!';
 
         } else {
-          domCache.payoffMessageP.innerHTML = 'By paying ' +
-              payments.toFixed(2) + ' every month, it will take roughly ' +
-              months + ' months for you to pay off all of your debts.';
+          var message = [];
+          message.push('By paying ' + payments.toFixed(2) +
+              ' every month, it will take roughly ');
+
+          var years = Math.floor(months/12);
+          months = months%12;
+
+          if (years === 1) {
+            message.push('1 year ');
+          } else if (years > 0) {
+            message.push(years + ' years ');
+          }
+
+          if (years > 0 && months > 0) {
+            message.push('and ');
+          }
+
+          if (months === 1) {
+            message.push('1 month ');
+          } else if (months > 0) {
+            message.push(months + ' months ');
+          }
+
+          message.push('to pay off all of your debts.');
+
+          domCache.payoffMessageP.innerHTML = message.join('');
         }
       }
     }
