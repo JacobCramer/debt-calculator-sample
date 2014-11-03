@@ -30,11 +30,11 @@ define((function model(undefined){
   var prioritizationMethod = prioritizationMethods.HIGHEST_APR;
 
   var allocationMethods = {
-    'EVEN_SPLIT' : 'EVEN_SPLIT',
     'PRIORITY_FIRST' : 'PRIORITY_FIRST',
+    'EVEN_SPLIT' : 'EVEN_SPLIT',
     'PROPORTIONAL_SPLIT' : 'PROPORTIONAL_SPLIT'
   };
-  var allocationMethod = allocationMethods.EVEN_SPLIT;
+  var allocationMethod = allocationMethods.PRIORITY_FIRST;
 
   var publishTypes = {
     'ADD_DEBT' : 'ADD_DEBT',
