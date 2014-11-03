@@ -136,6 +136,16 @@ define((function view(undefined){
       payoffTimeDiv.appendChild(payoffMessageP);
       domCache.payoffMessageP = payoffMessageP;
 
+    var disclaimerDiv = document.createElement('div');
+    documentFragment.appendChild(disclaimerDiv);
+
+      var disclaimerP = document.createElement('p');
+      disclaimerP.innerHTML = 'Disclaimer: Every loan is different. ' +
+          'While this tool provides a reasonable estimation, it can not ' +
+          'account for all fees, charges, policies, and other possibilities. ' +
+          'For a full debt repayment analysis, consult a financial planner.';
+      payoffTimeDiv.appendChild(disclaimerP);
+
     programContainer.innerHTML = '';
     programContainer.appendChild(documentFragment);
   };
