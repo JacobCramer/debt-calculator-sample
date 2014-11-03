@@ -403,19 +403,19 @@ define((function view(undefined){
       if (domCache.prioritizationSelect) {
         switch(method) {
           case 'apr':
-            domCache.allocationSelect.selectedIndex = '0';
+            domCache.prioritizationSelect.selectedIndex = '0';
             break;
 
           case 'owed':
-            domCache.allocationSelect.selectedIndex = '1';
+            domCache.prioritizationSelect.selectedIndex = '1';
             break;
 
           case 'custom':
-            domCache.allocationSelect.selectedIndex = '2';
+            domCache.prioritizationSelect.selectedIndex = '2';
             break;
 
           default:
-            throw new Error('setAllocationMethod(): ' +
+            throw new Error('setPriotitizationMethod(): ' +
               'Invalid method: ' + method);
         }
       }

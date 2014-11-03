@@ -384,10 +384,11 @@ define((function model(undefined){
 
           case allocationMethods.EVEN_SPLIT:
             payment = roundToTwoDecimals(surplus / orderedDebts.length);
+            surplus = 0.0;
             break;
 
           case allocationMethods.PRIORITY_FIRST:
-            payment = surplus;
+            // Nothing to do here
             break;
 
           case allocationMethods.PROPORTIONAL_SPLIT:
@@ -398,6 +399,8 @@ define((function model(undefined){
             for (i = 0; i < orderedDebts.length; i++) {
               totalAmountRemaining += orderedDebts[i].remainingOwed;
             }
+
+            surplus = 0.0;
             break;
 
           default:
@@ -405,7 +408,7 @@ define((function model(undefined){
                 'Bad allocationMethod: ' + allocationMethod);
         }
 
-        surplus = 0.0;
+
         // Main payment loop
         for (i = 0; i < orderedDebts.length; i++) {
           debt = orderedDebts[i];
