@@ -2,7 +2,6 @@
 // JSHint directive
 /* global define */
 
-// TODO - Rework this file.
 define((function presenter(undefined){
   'use strict';
 

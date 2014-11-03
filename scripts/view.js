@@ -2,11 +2,6 @@
 // JSHint directive
 /* global define */
 
-// TODO - Rename functions/variables?
-// TODO - Add a drag functionality?
-// TODO - Add disclaimer?
-// TODO - Add some sort of loading screen?
-// TODO - Hide priority select if not in use?
 define((function view(undefined){
   'use strict';
 
@@ -428,7 +423,6 @@ define((function view(undefined){
             'Invalid amount: ' + amount);
       }
 
-      // TODO - Do we need to protect against illogical settings?
       if (domCache.paymentInput) {
         if (amount === 0) {
           domCache.paymentInput.value = undefined;

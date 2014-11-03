@@ -2,11 +2,6 @@
 // JSHint directive
 /* global define */
 
-// TODO - Rename/shorten functions and variables
-// TODO - More code cleanup; some things aren't where they should be
-// TODO - Reorder functions?
-// TODO - Standardize publish events?
-// TODO - Check totalOwed < minimumMonthly logic
 define((function model(undefined){
   'use strict';
 
