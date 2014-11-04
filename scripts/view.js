@@ -183,10 +183,10 @@ define((function view(undefined){
       paymentsDiv.appendChild(paymentP);
 
       var paymentInput = document.createElement('input');
-      paymentInput.type = 'number';
+      paymentInput.type = 'text';
       paymentInput.placeholder = 'Enter Here';
-      paymentInput.min = '0';
-      paymentInput.step = 'any';
+      // paymentInput.min = '0';
+      // paymentInput.step = 'any';
       addListener(paymentInput, 'input', requestSetMonthlyPayment);
       paymentInput.className = 'paymentInput';
       paymentsDiv.appendChild(paymentInput);
@@ -314,10 +314,10 @@ define((function view(undefined){
 
     var tdAmountOwed = document.createElement('td');
     var inputAmountOwed = document.createElement('input');
-    inputAmountOwed.type = 'number';
+    inputAmountOwed.type = 'text';
     inputAmountOwed.placeholder = 'Owed';
-    inputAmountOwed.min = '0';
-    inputAmountOwed.step = 'any';
+    // inputAmountOwed.min = '0';
+    // inputAmountOwed.step = 'any';
     inputAmountOwed.dataset.uid = uid;
     inputAmountOwed.dataset.property = 'amountOwed';
     addListener(inputAmountOwed, 'input', requestSetDebtInfo);
@@ -327,10 +327,10 @@ define((function view(undefined){
 
     var tdAPR = document.createElement('td');
     var inputAPR = document.createElement('input');
-    inputAPR.type = 'number';
+    inputAPR.type = 'text';
     inputAPR.placeholder = 'APR';
-    inputAPR.min = '0';
-    inputAPR.step = 'any';
+    // inputAPR.min = '0';
+    // inputAPR.step = 'any';
     inputAPR.dataset.uid = uid;
     inputAPR.dataset.property = 'apr';
     addListener(inputAPR, 'input', requestSetDebtInfo);
@@ -340,10 +340,10 @@ define((function view(undefined){
 
     var tdMinimumMonthly = document.createElement('td');
     var inputMinimumMonthly = document.createElement('input');
-    inputMinimumMonthly.type = 'number';
+    inputMinimumMonthly.type = 'text';
     inputMinimumMonthly.placeholder = 'Monthly';
-    inputMinimumMonthly.min = '0';
-    inputMinimumMonthly.step = 'any';
+    // inputMinimumMonthly.min = '0';
+    // inputMinimumMonthly.step = 'any';
     inputMinimumMonthly.dataset.uid = uid;
     inputMinimumMonthly.dataset.property = 'minimumMonthly';
     addListener(inputMinimumMonthly, 'input', requestSetDebtInfo);
@@ -508,7 +508,7 @@ define((function view(undefined){
 
       if (domCache.paymentInput) {
         if (amount === 0) {
-          domCache.paymentInput.value = undefined;
+          domCache.paymentInput.value = '';
         } else if (Number(domCache.paymentInput.value) !== Number(amount)) {
           domCache.paymentInput.value = amount;
         }
