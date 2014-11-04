@@ -2,7 +2,8 @@
 // JSHint directive
 /* global define */
 
-define((function view(undefined){
+define(['jquery', 'jquery.splendid.textchange'],
+      function view($, jQuerySplendid, undefined){
   'use strict';
 
   var config = {
@@ -187,7 +188,7 @@ define((function view(undefined){
       paymentInput.placeholder = 'Enter Here';
       // paymentInput.min = '0';
       // paymentInput.step = 'any';
-      addListener(paymentInput, 'input', requestSetMonthlyPayment);
+      $(paymentInput).on('textchange', requestSetMonthlyPayment);
       paymentInput.className = 'paymentInput';
       paymentsDiv.appendChild(paymentInput);
       domCache.paymentInput = paymentInput;
@@ -326,7 +327,7 @@ define((function view(undefined){
     }
     inputAmountOwed.dataset.uid = uid;
     inputAmountOwed.dataset.property = 'amountOwed';
-    addListener(inputAmountOwed, 'input', requestSetDebtInfo);
+    $(inputAmountOwed).on('textchange', requestSetDebtInfo);
     inputAmountOwed.className = 'inputColumn';
     tdAmountOwed.appendChild(inputAmountOwed);
     debtCache.amountOwedInput = inputAmountOwed;
@@ -342,7 +343,7 @@ define((function view(undefined){
     }
     inputAPR.dataset.uid = uid;
     inputAPR.dataset.property = 'apr';
-    addListener(inputAPR, 'input', requestSetDebtInfo);
+    $(inputAPR).on('textchange', requestSetDebtInfo);
     inputAPR.className = 'inputColumn';
     tdAPR.appendChild(inputAPR);
     debtCache.aprInput = inputAPR;
@@ -358,7 +359,7 @@ define((function view(undefined){
     }
     inputMinimumMonthly.dataset.uid = uid;
     inputMinimumMonthly.dataset.property = 'minimumMonthly';
-    addListener(inputMinimumMonthly, 'input', requestSetDebtInfo);
+    $(inputMinimumMonthly).on('textchange', requestSetDebtInfo);
     inputMinimumMonthly.className = 'inputColumn';
     tdMinimumMonthly.appendChild(inputMinimumMonthly);
     debtCache.monthlyMinimumInput = inputMinimumMonthly;
@@ -622,7 +623,7 @@ define((function view(undefined){
       }
     }
   };
-}()));
+});
 
 
 
