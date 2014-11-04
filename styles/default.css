@@ -12,8 +12,6 @@
 }
 
 th {
-  /*padding-top: 0.5em;*/
-  /*padding-bottom: 0.5em;*/
   position: relative;
   top: 0.3em;
   font-weight: 300;
@@ -23,7 +21,6 @@ th {
 td {
   padding-top: 0.5em;
   padding-bottom: 1.3em;
-  /*background-color: #FFBEBE;*/
 }
 
 button {
@@ -48,10 +45,7 @@ button:hover {
 }
 
 .debtTable {
-  /*margin: 1em;*/
   background-color: #F3F3F3;
-  /*border-collapse: separate;*/
-  /*border-spacing: 1.3em;*/
   width: 90%;
   margin : 0 auto;
   table-layout: fixed;
@@ -63,12 +57,10 @@ button:hover {
 
 .inputHeader {
   width: 30%;
-  /*background-color: #BABABA;*/
 }
 
 header {
   font-size: 2em;
-  /*background-color: #A8A8A8;*/
   text-align: center;
   padding: 0.7em;
   font-weight: 300;
@@ -92,26 +84,18 @@ p {
   color: #F3F3F3;
   padding-left: 0.3em;
   padding-right: 0.3em;
-  /*font-weight: 400;*/
-
 }
 
 .selectsContainerDiv {
-  /*position: relative;*/
   width: 80%;
-  /*height: 80%;*/
   display: block;
   margin : 0em auto;
-  /*background-color: #A8A8A8;*/
 }
 
 .allocationDiv, .prioritizationDiv {
-  /*background-color: #7A7A43;*/
   width: 50%;
-  /*height: 1000px;*/
   display: inline-block;
   vertical-align: bottom;
-  /*display: table-cell;*/
 }
 
 .prioritizationDiv {
@@ -124,20 +108,9 @@ p {
   font-size: 1.2em;
   height: 40%;
   margin : 0.5em auto 0em;
-  /*display: table-cell;*/
-  /*padding: 1em;*/
-}
-
-.selectInstructionsP {
-  /*background-color: #BABABA;*/
-  /*font-size: 1em;*/
-  /*text-align: center;*/
-  /*margin : 0em auto;*/
-  /*width: 85%;*/
 }
 
 select {
-  /*position: absolute;*/
   display: block;
   margin : 0em auto;
   width: 85%;
@@ -145,7 +118,6 @@ select {
   border-style: none;
   text-align: center;
   padding: 0.4em;
-  /*bottom: 0px;*/
 }
 
 
@@ -184,21 +156,8 @@ input {
 }
 
 .paymentInput {
-  /*display: inline;*/
-  /*background-color: #949494;*/
-  /*font-size: 1em;*/
-/*  padding-left: 0.3em;
-  padding-right: 0.3em;
-  padding-top: 0.2em;
-  padding-bottom: 0.2em;
-  margin-right: 0.5em;
-  margin-left: 0.5em;*/
   background-color: #F3F3F3;
-
   width: 100%;
-
-  /*background-color: #999;*/
-
   border-style: none;
   text-align: center;
 }
