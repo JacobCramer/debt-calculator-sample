@@ -236,14 +236,24 @@ define(['jquery', 'jquery.splendid.textchange'],
     }
   };
 
+  var getEventElem = function getEventElem(event) {
+
+    // IE8 has its own way of handling things.
+    // This should support modern browsers and IE8
+    event = event || window.event;
+    var eventElem = event.target || event.srcElement;
+
+    return eventElem;
+  };
+
   var requestSetDebtInfo = function requestSetDebtInfo(event) {
 
-    var changedElement = event.target;
+    var eventElem = getEventElem(event);
 
     var publishData = {
-      'uid' : changedElement.dataset.uid,
-      'property' : changedElement.dataset.property,
-      'amount' : changedElement.value
+      'uid' : eventElem.dataset.uid,
+      'property' : eventElem.dataset.property,
+      'amount' : eventElem.value
     };
 
     publish('REQUEST_UPDATE_DEBT', publishData);
@@ -251,10 +261,10 @@ define(['jquery', 'jquery.splendid.textchange'],
 
   var requestSetDeleteDebt = function requestSetDeleteDebt(event) {
 
-    var changedElement = event.target;
+    var eventElem = getEventElem(event);
 
     var publishData = {
-      'uid' : changedElement.dataset.uid
+      'uid' : eventElem.dataset.uid
     };
 
     publish('REQUEST_DELETE_DEBT', publishData);
