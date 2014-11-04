@@ -307,6 +307,9 @@ define((function view(undefined){
     var tdDelete = document.createElement('td');
     var buttonDelete = document.createElement('button');
     buttonDelete.innerHTML = 'X';
+    if (typeof buttonDelete.dataset === 'undefined') {
+      buttonDelete.dataset = {};
+    }
     buttonDelete.dataset.uid = uid;
     addListener(buttonDelete, 'click', requestSetDeleteDebt);
     buttonDelete.className = 'deleteColumn';
@@ -318,6 +321,9 @@ define((function view(undefined){
     inputAmountOwed.placeholder = 'Owed';
     // inputAmountOwed.min = '0';
     // inputAmountOwed.step = 'any';
+    if (typeof inputAmountOwed.dataset === 'undefined') {
+      inputAmountOwed.dataset = {};
+    }
     inputAmountOwed.dataset.uid = uid;
     inputAmountOwed.dataset.property = 'amountOwed';
     addListener(inputAmountOwed, 'input', requestSetDebtInfo);
@@ -331,6 +337,9 @@ define((function view(undefined){
     inputAPR.placeholder = 'APR';
     // inputAPR.min = '0';
     // inputAPR.step = 'any';
+    if (typeof inputAPR.dataset === 'undefined') {
+      inputAPR.dataset = {};
+    }
     inputAPR.dataset.uid = uid;
     inputAPR.dataset.property = 'apr';
     addListener(inputAPR, 'input', requestSetDebtInfo);
@@ -344,6 +353,9 @@ define((function view(undefined){
     inputMinimumMonthly.placeholder = 'Monthly';
     // inputMinimumMonthly.min = '0';
     // inputMinimumMonthly.step = 'any';
+    if (typeof inputMinimumMonthly.dataset === 'undefined') {
+      inputMinimumMonthly.dataset = {};
+    }
     inputMinimumMonthly.dataset.uid = uid;
     inputMinimumMonthly.dataset.property = 'minimumMonthly';
     addListener(inputMinimumMonthly, 'input', requestSetDebtInfo);
