@@ -413,7 +413,10 @@ define((function view(undefined){
               'Invalid property: ' + property);
         }
 
-        elem.value = amount;
+        // Don't bother making changes if it would be exactly the same
+        if (Number(elem.value) !== Number(amount)){
+          elem.value = amount;
+        }
       }
     },
 
@@ -495,7 +498,7 @@ define((function view(undefined){
       if (domCache.paymentInput) {
         if (amount === 0) {
           domCache.paymentInput.value = undefined;
-        } else {
+        } else if (Number(domCache.paymentInput.value) !== Number(amount)) {
           domCache.paymentInput.value = amount;
         }
       }
