@@ -118,9 +118,9 @@ select {
   border-style: none;
   text-align: center;
   padding: 0.4em;
+  font-weight: 400;
+  color: #333333;
 }
-
-
 
 span {
   background-color: #949494;
