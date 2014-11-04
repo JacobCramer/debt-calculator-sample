@@ -25,6 +25,17 @@ define((function view(undefined){
     'REQUEST_ALLOCATION_METHOD' : 'REQUEST_ALLOCATION_METHOD'
   };
 
+  var addListener = function addListener(elem, type, callback) {
+
+    if (elem.addEventListener) {
+      // Modern browsers
+      elem.addEventListener(type, callback);
+    } else if (elem.attachEvent) {
+      // IE8 and other old browsers
+      elem.attachEvent('on' + type, callback);
+    }
+  };
+
   var init = function init() {
 
     var programContainer = document.getElementById(config.programContainerId);
@@ -115,7 +126,7 @@ define((function view(undefined){
         allocationDiv.appendChild(allocationP);
 
         var allocationSelect = document.createElement('select');
-        allocationSelect.addEventListener('change', requestSetAllocationMethod);
+        addListener(allocationSelect, 'change', requestSetAllocationMethod);
         allocationDiv.appendChild(allocationSelect);
         domCache.allocationSelect = allocationSelect;
 
@@ -143,7 +154,7 @@ define((function view(undefined){
         prioritizationDiv.appendChild(prioritizationP);
 
         var prioritizationSelect = document.createElement('select');
-        prioritizationSelect.addEventListener('change', requestSetPriorityMethod);
+        addListener(prioritizationSelect, 'change', requestSetPriorityMethod);
         prioritizationDiv.appendChild(prioritizationSelect);
         domCache.prioritizationSelect = prioritizationSelect;
 
@@ -176,7 +187,7 @@ define((function view(undefined){
       paymentInput.placeholder = 'Enter Here';
       paymentInput.min = '0';
       paymentInput.step = 'any';
-      paymentInput.addEventListener('input', requestSetMonthlyPayment);
+      addListener(paymentInput, 'input', requestSetMonthlyPayment);
       paymentInput.className = 'paymentInput';
       paymentsDiv.appendChild(paymentInput);
       domCache.paymentInput = paymentInput;
@@ -297,7 +308,7 @@ define((function view(undefined){
     var buttonDelete = document.createElement('button');
     buttonDelete.innerHTML = 'X';
     buttonDelete.dataset.uid = uid;
-    buttonDelete.addEventListener('click', requestSetDeleteDebt);
+    addListener(buttonDelete, 'click', requestSetDeleteDebt);
     buttonDelete.className = 'deleteColumn';
     tdDelete.appendChild(buttonDelete);
 
@@ -309,7 +320,7 @@ define((function view(undefined){
     inputAmountOwed.step = 'any';
     inputAmountOwed.dataset.uid = uid;
     inputAmountOwed.dataset.property = 'amountOwed';
-    inputAmountOwed.addEventListener('input', requestSetDebtInfo);
+    addListener(inputAmountOwed, 'input', requestSetDebtInfo);
     inputAmountOwed.className = 'inputColumn';
     tdAmountOwed.appendChild(inputAmountOwed);
     debtCache.amountOwedInput = inputAmountOwed;
@@ -322,7 +333,7 @@ define((function view(undefined){
     inputAPR.step = 'any';
     inputAPR.dataset.uid = uid;
     inputAPR.dataset.property = 'apr';
-    inputAPR.addEventListener('input', requestSetDebtInfo);
+    addListener(inputAPR, 'input', requestSetDebtInfo);
     inputAPR.className = 'inputColumn';
     tdAPR.appendChild(inputAPR);
     debtCache.aprInput = inputAPR;
@@ -335,7 +346,7 @@ define((function view(undefined){
     inputMinimumMonthly.step = 'any';
     inputMinimumMonthly.dataset.uid = uid;
     inputMinimumMonthly.dataset.property = 'minimumMonthly';
-    inputMinimumMonthly.addEventListener('input', requestSetDebtInfo);
+    addListener(inputMinimumMonthly, 'input', requestSetDebtInfo);
     inputMinimumMonthly.className = 'inputColumn';
     tdMinimumMonthly.appendChild(inputMinimumMonthly);
     debtCache.monthlyMinimumInput = inputMinimumMonthly;
