@@ -11,6 +11,8 @@ define((function view(undefined){
 
   var subscribers = [];
 
+  var totalMinimum = 0.0;
+
   var domCache = {
     'debts' : {}
   };
@@ -35,34 +37,50 @@ define((function view(undefined){
 
     var documentFragment = document.createDocumentFragment();
 
+    var titleHeader = document.createElement('header');
+    titleHeader.innerHTML = 'Debt Repayment Calculator';
+    documentFragment.appendChild(titleHeader);
+
+    var instructionsP = document.createElement('p');
+    instructionsP.innerHTML = 'Enter the amount owed, APR, and minimum ' +
+        'monthly payment for each debt.';
+    instructionsP.className = 'instructionsP';
+    documentFragment.appendChild(instructionsP);
+
     var debtTable = document.createElement('table');
+    debtTable.className = 'debtTable';
     documentFragment.appendChild(debtTable);
     domCache.debtTable = debtTable;
 
       var headerTr = document.createElement('tr');
+      headerTr.className = 'headerTr';
       debtTable.appendChild(headerTr);
 
         var deleteHeaderTr = document.createElement('th');
-        deleteHeaderTr.innerHTML = 'Delete Entry';
+        deleteHeaderTr.innerHTML = '';
+        deleteHeaderTr.className = 'deleteHeader';
         headerTr.appendChild(deleteHeaderTr);
 
         var owedHeaderTr = document.createElement('th');
-        owedHeaderTr.innerHTML = 'Amount Owed';
+        owedHeaderTr.innerHTML = 'Owed';
+        owedHeaderTr.className = 'inputHeader';
         headerTr.appendChild(owedHeaderTr);
 
         var aprHeaderTr = document.createElement('th');
         aprHeaderTr.innerHTML = 'APR';
+        aprHeaderTr.className = 'inputHeader';
         headerTr.appendChild(aprHeaderTr);
 
         var monthlyTR = document.createElement('th');
-        monthlyTR.innerHTML = 'Minimum Monthly Payment';
+        monthlyTR.innerHTML = 'Monthly';
+        monthlyTR.className = 'inputHeader';
         headerTr.appendChild(monthlyTR);
 
     var totalsDiv = document.createElement('div');
     documentFragment.appendChild(totalsDiv);
 
       var totalOwedP = document.createElement('p');
-      totalOwedP.innerHTML = 'Total owed: ';
+      totalOwedP.innerHTML = 'Total owed:';
       totalsDiv.appendChild(totalOwedP);
 
         var totalOwedSpan = document.createElement('span');
@@ -70,82 +88,96 @@ define((function view(undefined){
         totalOwedP.appendChild(totalOwedSpan);
         domCache.totalOwedSpan = totalOwedSpan;
 
-      var totalMinimumP = document.createElement('p');
-      totalMinimumP.innerHTML = 'Total minimum monthly payment: ';
-      totalsDiv.appendChild(totalMinimumP);
+      // var totalMinimumP = document.createElement('p');
+      // totalMinimumP.innerHTML = 'Total minimum monthly payment:';
+      // totalsDiv.appendChild(totalMinimumP);
 
-        var totalMinimumSpan = document.createElement('span');
-        totalMinimumSpan.innerHTML = '0.00';
-        totalMinimumP.appendChild(totalMinimumSpan);
-        domCache.totalMinimumSpan = totalMinimumSpan;
+      //   var totalMinimumSpan = document.createElement('span');
+      //   totalMinimumSpan.innerHTML = '0.00';
+      //   totalMinimumP.appendChild(totalMinimumSpan);
+      //   domCache.totalMinimumSpan = totalMinimumSpan;
 
-    var allocationDiv = document.createElement('div');
-    documentFragment.appendChild(allocationDiv);
+    var selectsContainerDiv = document.createElement('div');
+    selectsContainerDiv.className = 'selectsContainerDiv';
+    documentFragment.appendChild(selectsContainerDiv);
 
-      var allocationP = document.createElement('p');
-      allocationP.innerHTML = 'How to allocate amount over monthly minimum:';
-      allocationDiv.appendChild(allocationP);
+      var selectInstructionsP = document.createElement('p');
+      // selectInstructionsP.innerHTML = 'Select how to allocate extra money, and how prioritize which debts to pay first.';
+      selectInstructionsP.className = 'selectInstructionsP';
+      selectsContainerDiv.appendChild(selectInstructionsP);
 
-      var allocationSelect = document.createElement('select');
-      allocationSelect.addEventListener('change', requestSetAllocationMethod);
-      allocationDiv.appendChild(allocationSelect);
-      domCache.allocationSelect = allocationSelect;
+      var allocationDiv = document.createElement('div');
+      allocationDiv.className = 'allocationDiv';
+      selectsContainerDiv.appendChild(allocationDiv);
 
-        var priorityOption = document.createElement('option');
-        priorityOption.innerHTML = 'Pay to highest priority debt';
-        priorityOption.value = 'priority';
-        allocationSelect.appendChild(priorityOption);
+        var allocationP = document.createElement('p');
+        allocationP.innerHTML = 'Allocation';
+        allocationDiv.appendChild(allocationP);
 
-        var evenOption = document.createElement('option');
-        evenOption.innerHTML = 'Split evenly between all debts';
-        evenOption.value = 'even';
-        allocationSelect.appendChild(evenOption);
+        var allocationSelect = document.createElement('select');
+        allocationSelect.addEventListener('change', requestSetAllocationMethod);
+        allocationDiv.appendChild(allocationSelect);
+        domCache.allocationSelect = allocationSelect;
 
-        var proportionalOption = document.createElement('option');
-        proportionalOption.innerHTML = 'Split proportionally by amount owed';
-        proportionalOption.value = 'proportional';
-        allocationSelect.appendChild(proportionalOption);
+          var priorityOption = document.createElement('option');
+          priorityOption.innerHTML = 'Priority first';
+          priorityOption.value = 'priority';
+          allocationSelect.appendChild(priorityOption);
 
-    var prioritizationDiv = document.createElement('div');
-    documentFragment.appendChild(prioritizationDiv);
+          var evenOption = document.createElement('option');
+          evenOption.innerHTML = 'Even split';
+          evenOption.value = 'even';
+          allocationSelect.appendChild(evenOption);
 
-      var prioritizationP = document.createElement('p');
-      prioritizationP.innerHTML = 'How to prioritize debts:';
-      prioritizationDiv.appendChild(prioritizationP);
+          var proportionalOption = document.createElement('option');
+          proportionalOption.innerHTML = 'Proportional split';
+          proportionalOption.value = 'proportional';
+          allocationSelect.appendChild(proportionalOption);
 
-      var prioritizationSelect = document.createElement('select');
-      prioritizationSelect.addEventListener('change', requestSetPriorityMethod);
-      prioritizationDiv.appendChild(prioritizationSelect);
-      domCache.prioritizationSelect = prioritizationSelect;
+      var prioritizationDiv = document.createElement('div');
+      prioritizationDiv.className = 'prioritizationDiv';
+      selectsContainerDiv.appendChild(prioritizationDiv);
 
-        var aprOption = document.createElement('option');
-        aprOption.innerHTML = 'Highest APR first';
-        aprOption.value = 'apr';
-        prioritizationSelect.appendChild(aprOption);
+        var prioritizationP = document.createElement('p');
+        prioritizationP.innerHTML = 'Prioritization';
+        prioritizationDiv.appendChild(prioritizationP);
 
-        var owedOption = document.createElement('option');
-        owedOption.innerHTML = 'Lowest amount owed first';
-        owedOption.value = 'owed';
-        prioritizationSelect.appendChild(owedOption);
+        var prioritizationSelect = document.createElement('select');
+        prioritizationSelect.addEventListener('change', requestSetPriorityMethod);
+        prioritizationDiv.appendChild(prioritizationSelect);
+        domCache.prioritizationSelect = prioritizationSelect;
 
-        var customOption = document.createElement('option');
-        customOption.innerHTML = 'Use order entered by user above';
-        customOption.value = 'custom';
-        prioritizationSelect.appendChild(customOption);
+          var aprOption = document.createElement('option');
+          aprOption.innerHTML = 'Highest APR';
+          aprOption.value = 'apr';
+          prioritizationSelect.appendChild(aprOption);
+
+          var owedOption = document.createElement('option');
+          owedOption.innerHTML = 'Lowest owed';
+          owedOption.value = 'owed';
+          prioritizationSelect.appendChild(owedOption);
+
+          var customOption = document.createElement('option');
+          customOption.innerHTML = 'As listed';
+          customOption.value = 'custom';
+          prioritizationSelect.appendChild(customOption);
 
     var paymentsDiv = document.createElement('div');
+    paymentsDiv.className = 'paymentsDiv';
     documentFragment.appendChild(paymentsDiv);
 
       var paymentP = document.createElement('p');
-      paymentP.innerHTML = 'How much to pay every month:';
+      paymentP.innerHTML = 'Monthly Payments';
+      paymentP.className = 'paymentP';
       paymentsDiv.appendChild(paymentP);
 
       var paymentInput = document.createElement('input');
       paymentInput.type = 'number';
-      paymentInput.placeholder = 'Monthly Payments';
+      paymentInput.placeholder = 'Enter Here';
       paymentInput.min = '0';
       paymentInput.step = 'any';
       paymentInput.addEventListener('input', requestSetMonthlyPayment);
+      paymentInput.className = 'paymentInput';
       paymentsDiv.appendChild(paymentInput);
       domCache.paymentInput = paymentInput;
 
@@ -154,6 +186,7 @@ define((function view(undefined){
 
       var payoffMessageP = document.createElement('p');
       payoffMessageP.innerHTML = '';
+      payoffMessageP.className = 'payoffMessageP';
       payoffTimeDiv.appendChild(payoffMessageP);
       domCache.payoffMessageP = payoffMessageP;
 
@@ -165,6 +198,7 @@ define((function view(undefined){
           'While this tool provides a reasonable estimation, it can not ' +
           'account for all fees, charges, policies, and other possibilities. ' +
           'For a full debt repayment analysis, consult a financial planner.';
+      disclaimerP.className = 'disclaimerP';
       payoffTimeDiv.appendChild(disclaimerP);
 
     programContainer.innerHTML = '';
@@ -261,20 +295,22 @@ define((function view(undefined){
 
     var tdDelete = document.createElement('td');
     var buttonDelete = document.createElement('button');
-    buttonDelete.innerHTML = 'Delete';
+    buttonDelete.innerHTML = 'X';
     buttonDelete.dataset.uid = uid;
     buttonDelete.addEventListener('click', requestSetDeleteDebt);
+    buttonDelete.className = 'deleteColumn';
     tdDelete.appendChild(buttonDelete);
 
     var tdAmountOwed = document.createElement('td');
     var inputAmountOwed = document.createElement('input');
     inputAmountOwed.type = 'number';
-    inputAmountOwed.placeholder = 'Amount Owed';
+    inputAmountOwed.placeholder = 'Owed';
     inputAmountOwed.min = '0';
     inputAmountOwed.step = 'any';
     inputAmountOwed.dataset.uid = uid;
     inputAmountOwed.dataset.property = 'amountOwed';
     inputAmountOwed.addEventListener('input', requestSetDebtInfo);
+    inputAmountOwed.className = 'inputColumn';
     tdAmountOwed.appendChild(inputAmountOwed);
     debtCache.amountOwedInput = inputAmountOwed;
 
@@ -287,18 +323,20 @@ define((function view(undefined){
     inputAPR.dataset.uid = uid;
     inputAPR.dataset.property = 'apr';
     inputAPR.addEventListener('input', requestSetDebtInfo);
+    inputAPR.className = 'inputColumn';
     tdAPR.appendChild(inputAPR);
     debtCache.aprInput = inputAPR;
 
     var tdMinimumMonthly = document.createElement('td');
     var inputMinimumMonthly = document.createElement('input');
     inputMinimumMonthly.type = 'number';
-    inputMinimumMonthly.placeholder = 'Minimum Monthly Payment';
+    inputMinimumMonthly.placeholder = 'Monthly';
     inputMinimumMonthly.min = '0';
     inputMinimumMonthly.step = 'any';
     inputMinimumMonthly.dataset.uid = uid;
     inputMinimumMonthly.dataset.property = 'minimumMonthly';
     inputMinimumMonthly.addEventListener('input', requestSetDebtInfo);
+    inputMinimumMonthly.className = 'inputColumn';
     tdMinimumMonthly.appendChild(inputMinimumMonthly);
     debtCache.monthlyMinimumInput = inputMinimumMonthly;
 
@@ -483,9 +521,11 @@ define((function view(undefined){
             'Invalid amount: ' + amount);
       }
 
-      if (domCache.totalMinimumSpan) {
-        domCache.totalMinimumSpan.innerHTML = amount.toFixed(2);
-      }
+      totalMinimum = amount;
+
+      // if (domCache.totalMinimumSpan) {
+      //   domCache.totalMinimumSpan.innerHTML = amount.toFixed(2);
+      // }
     },
 
     'setPayoffTime' : function setPayoffTime(months) {
@@ -497,15 +537,15 @@ define((function view(undefined){
             'Invalid months: ' + months);
       }
 
-      var payments, minimumPayment;
+      var payments;
 
       if (domCache.paymentInput) {
         payments = Number(domCache.paymentInput.value);
       }
 
-      if (domCache.totalMinimumSpan) {
-        minimumPayment = domCache.totalMinimumSpan.innerHTML;
-      }
+      // if (domCache.totalMinimumSpan) {
+      //   minimumPayment = domCache.totalMinimumSpan.innerHTML;
+      // }
 
       if (domCache.payoffMessageP) {
 
@@ -515,10 +555,10 @@ define((function view(undefined){
         } else if (months === 0) {
           domCache.payoffMessageP.innerHTML = '';
 
-        } else if (months === -1 && minimumPayment !== '') {
+        } else if (months === -1 && totalMinimum !== 0) {
           domCache.payoffMessageP.innerHTML = 'Be sure to enter an amount ' +
               'at least as high as the total minimum monthly payment of ' +
-              minimumPayment + '.';
+              totalMinimum + '.';
 
         } else if (months === 1200) {
           domCache.payoffMessageP.innerHTML = 'By paying ' +
