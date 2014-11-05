@@ -2,7 +2,7 @@
 // JSHint directive
 /* global define */
 
-define((function model(undefined){
+define('model', [], (function model(undefined){
   'use strict';
 
   var config = {

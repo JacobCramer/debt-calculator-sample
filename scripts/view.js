@@ -2,7 +2,7 @@
 // JSHint directive
 /* global define */
 
-define(['jquery', 'jquery.splendid.textchange'],
+define('view', ['jquery', 'jquery.splendid.textchange'],
       function view($, jQuerySplendid, undefined){
   'use strict';
 
@@ -100,21 +100,11 @@ define(['jquery', 'jquery.splendid.textchange'],
         totalOwedP.appendChild(totalOwedSpan);
         domCache.totalOwedSpan = totalOwedSpan;
 
-      // var totalMinimumP = document.createElement('p');
-      // totalMinimumP.innerHTML = 'Total minimum monthly payment:';
-      // totalsDiv.appendChild(totalMinimumP);
-
-      //   var totalMinimumSpan = document.createElement('span');
-      //   totalMinimumSpan.innerHTML = '0.00';
-      //   totalMinimumP.appendChild(totalMinimumSpan);
-      //   domCache.totalMinimumSpan = totalMinimumSpan;
-
     var selectsContainerDiv = document.createElement('div');
     selectsContainerDiv.className = 'selectsContainerDiv';
     documentFragment.appendChild(selectsContainerDiv);
 
       var selectInstructionsP = document.createElement('p');
-      // selectInstructionsP.innerHTML = 'Select how to allocate extra money, and how prioritize which debts to pay first.';
       selectInstructionsP.className = 'selectInstructionsP';
       selectsContainerDiv.appendChild(selectInstructionsP);
 
@@ -186,8 +176,7 @@ define(['jquery', 'jquery.splendid.textchange'],
       var paymentInput = document.createElement('input');
       paymentInput.type = 'text';
       paymentInput.placeholder = 'Enter Here';
-      // paymentInput.min = '0';
-      // paymentInput.step = 'any';
+      $(paymentInput).keydown(restrictInput);
       $(paymentInput).on('textchange', requestSetMonthlyPayment);
       paymentInput.className = 'paymentInput';
       paymentsDiv.appendChild(paymentInput);
@@ -337,6 +326,7 @@ define(['jquery', 'jquery.splendid.textchange'],
     }
     inputAmountOwed.dataset.uid = uid;
     inputAmountOwed.dataset.property = 'amountOwed';
+    $(inputAmountOwed).keydown(restrictInput);
     $(inputAmountOwed).on('textchange', requestSetDebtInfo);
     inputAmountOwed.className = 'inputColumn';
     tdAmountOwed.appendChild(inputAmountOwed);
@@ -353,6 +343,7 @@ define(['jquery', 'jquery.splendid.textchange'],
     }
     inputAPR.dataset.uid = uid;
     inputAPR.dataset.property = 'apr';
+    $(inputAPR).keydown(restrictInput);
     $(inputAPR).on('textchange', requestSetDebtInfo);
     inputAPR.className = 'inputColumn';
     tdAPR.appendChild(inputAPR);
@@ -369,6 +360,7 @@ define(['jquery', 'jquery.splendid.textchange'],
     }
     inputMinimumMonthly.dataset.uid = uid;
     inputMinimumMonthly.dataset.property = 'minimumMonthly';
+    $(inputMinimumMonthly).keydown(restrictInput);
     $(inputMinimumMonthly).on('textchange', requestSetDebtInfo);
     inputMinimumMonthly.className = 'inputColumn';
     tdMinimumMonthly.appendChild(inputMinimumMonthly);
@@ -385,6 +377,91 @@ define(['jquery', 'jquery.splendid.textchange'],
       throw new Error('newDebtInput(): ' +
         'debtTable DOM element mysteriously vanished!');
     }
+  };
+
+  var restrictInput = function restrictInput(eventObject) {
+
+    if (keyAddsNoCharacters(eventObject) || keyIsNumber(eventObject)) {
+      // Allow numbers and keys that don't add characters to the input
+      return;
+
+    } else if (keyIsDecimal(eventObject)) {
+      // Prevent multiple decimals
+      var eventElem = getEventElem(eventObject);
+      var count = (eventElem.value.match(/\./g) || []).length;
+
+      if (count > 0) {
+        eventObject.preventDefault();
+      }
+
+    } else {
+      // Prevent all other input
+      eventObject.preventDefault();
+    }
+  };
+
+  var keyAddsNoCharacters = function keyAddsNoCharacters(eventObject) {
+
+    var keyCode = eventObject.keyCode;
+    var validKeys = [
+      8, // Backspace
+      9, // Tab
+      13, // Enter
+      27, // Escape
+      46, // Delete
+      35, // End
+      36, // Home
+      37, // Left
+      38, // Up
+      39, // Right
+      40 // Down
+    ];
+
+    var length = validKeys.length;
+
+    for (var i = 0; i < length; i++) {
+      if (keyCode === validKeys[i]) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  var keyIsNumber = function keyIsNumber(eventObject) {
+
+    var keyCode = eventObject.keyCode;
+    var shift = eventObject.shiftKey;
+
+    // Numbers across the top of the keyboard
+    if (!shift && keyCode > 47 && keyCode < 58) {
+      return true;
+    }
+
+    // Numpad numbers
+    if (keyCode > 95 && keyCode < 106){
+      return true;
+    }
+
+    return false;
+  };
+
+  var keyIsDecimal = function keyIsDecimal(eventObject) {
+
+    var keyCode = eventObject.keyCode;
+    var shift = eventObject.shiftKey;
+
+    // Period (Near right shift on most US QWERTY keyboards)
+    if (!shift && keyCode === 190) {
+      return true;
+    }
+
+    // Numpad decimal
+    if (keyCode === 110) {
+      return true;
+    }
+
+    return false;
   };
 
   // Initial setup
@@ -448,7 +525,7 @@ define(['jquery', 'jquery.splendid.textchange'],
         }
 
         // Don't bother making changes if it would be exactly the same
-        if (Number(elem.value) !== Number(amount)){
+        if (Number(elem.value).toFixed(2) !== Number(amount).toFixed(2)){
           elem.value = amount;
         }
       }
@@ -532,7 +609,7 @@ define(['jquery', 'jquery.splendid.textchange'],
       if (domCache.paymentInput) {
         if (amount === 0) {
           domCache.paymentInput.value = '';
-        } else if (Number(domCache.paymentInput.value) !== Number(amount)) {
+        } else if (Number(domCache.paymentInput.value).toFixed(2) !== Number(amount).toFixed(2)) {
           domCache.paymentInput.value = amount;
         }
       }

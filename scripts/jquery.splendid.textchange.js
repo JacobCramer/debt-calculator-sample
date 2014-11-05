@@ -5,7 +5,7 @@
  * (c) 2013 Ben Alpert, released under the MIT license
  */
 
-define(['jquery'],function($) {
+define('jquery.splendid.textchange', ['jquery'],function($) {
 
 var testNode = document.createElement("input");
 var isInputSupported = "oninput" in testNode &&

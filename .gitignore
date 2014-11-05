@@ -1,0 +1,7 @@
+
+# Node dependency directory
+node_modules
+
+# Intermediate concatenated file
+# No real reason to have a complete duplicate of our code
+debt-calculator-sample.js

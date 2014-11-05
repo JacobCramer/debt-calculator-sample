@@ -2,7 +2,7 @@
 // JSHint directive
 /* global define */
 
-define((function presenter(undefined){
+define('presenter', [], (function presenter(undefined){
   'use strict';
 
   // No operation function
