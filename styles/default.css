@@ -1,0 +1,178 @@
+
+.debtContainer {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 3em;
+  margin-bottom: 2em;
+  width: 90%;
+  background-color: #BABABA;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  font-size: 1.5em;
+}
+
+th {
+  position: relative;
+  top: 0.3em;
+  font-weight: 300;
+  color: #555;
+}
+
+td {
+  padding-top: 0.5em;
+  padding-bottom: 1.3em;
+}
+
+button {
+  font-size: 1.8em;
+  font-weight: 600;
+  padding-right: 0.4em;
+  padding-left: 0.4em;
+  border-style: none;
+  display: block;
+  margin : 0 auto;
+  background-color: #CCADAD;
+  color: #995B5B;
+
+  transition: color .35s ease-in-out, background-color .35s ease-in-out;
+  -moz-transition: color .35s ease-in-out, background-color .35s ease-in-out;
+  -webkit-transition: color .35s ease-in-out, background-color .35s ease-in-out;
+}
+
+button:hover {
+  background-color: #CC7A7A;
+  color: #662828;
+}
+
+.debtTable {
+  background-color: #F3F3F3;
+  width: 90%;
+  margin : 0 auto;
+  table-layout: fixed;
+}
+
+.deleteHeader {
+  width: 10%;
+}
+
+.inputHeader {
+  width: 30%;
+}
+
+header {
+  font-size: 2em;
+  text-align: center;
+  padding: 0.7em;
+  font-weight: 300;
+}
+
+p {
+  font-size: 1.8em;
+  background-color: #A8A8A8;
+  text-align: right;
+  margin : 1em auto;
+  width: 85%;
+}
+
+.instructionsP {
+  font-size: 1em;
+  display: block;
+  margin : 0 auto;
+  text-align: center;
+  width: 90%;
+  background-color: #757575;
+  color: #F3F3F3;
+  padding-left: 0.3em;
+  padding-right: 0.3em;
+}
+
+.selectsContainerDiv {
+  width: 80%;
+  display: block;
+  margin : 0em auto;
+}
+
+.allocationDiv, .prioritizationDiv {
+  width: 50%;
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+.prioritizationDiv {
+  left: 50%;
+}
+
+.allocationDiv p, .prioritizationDiv p {
+  background-color: #7B7B7B;
+  text-align: center;
+  font-size: 1.2em;
+  height: 40%;
+  margin : 0.5em auto 0em;
+}
+
+select {
+  display: block;
+  margin : 0em auto;
+  width: 85%;
+  background-color: #949494;
+  border-style: none;
+  text-align: center;
+  padding: 0.4em;
+  font-weight: 400;
+  color: #333333;
+}
+
+span {
+  background-color: #949494;
+  padding-left: 0.3em;
+  padding-right: 0.3em;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+  margin-right: 0.5em;
+  margin-left: 0.5em;
+}
+
+input {
+  width: 90%;
+  text-align: right;
+  font-size: 2em;
+  display: block;
+  margin : 0 auto;
+}
+
+.paymentsDiv {
+  background-color: #7B7B7B;
+  width: 80%;
+  margin : 2em auto 0em;
+  padding: 0.2em;
+}
+
+.paymentP {
+  width: 100%;
+  text-align: center;
+  background-color: #7B7B7B;
+  margin : 0em auto 0.2em;
+
+}
+
+.paymentInput {
+  background-color: #F3F3F3;
+  width: 100%;
+  border-style: none;
+  text-align: center;
+}
+
+.payoffMessageP {
+  width: 100%;
+  text-align: center;
+  background-color: #A1A1A1;
+}
+
+.disclaimerP {
+  font-size: 0.7em;
+  text-align: center;
+  background-color: #BABABA;
+  padding-top: 2em;
+  padding-bottom: 2em;
+  width: 95%;
+}

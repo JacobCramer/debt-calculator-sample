@@ -2,7 +2,7 @@
 // JSHint directive
 /* global define */
 
-define((function model(undefined){
+define('model', [], (function model(undefined){
   'use strict';
 
   var config = {
@@ -30,11 +30,11 @@ define((function model(undefined){
   var prioritizationMethod = prioritizationMethods.HIGHEST_APR;
 
   var allocationMethods = {
-    'EVEN_SPLIT' : 'EVEN_SPLIT',
     'PRIORITY_FIRST' : 'PRIORITY_FIRST',
+    'EVEN_SPLIT' : 'EVEN_SPLIT',
     'PROPORTIONAL_SPLIT' : 'PROPORTIONAL_SPLIT'
   };
-  var allocationMethod = allocationMethods.EVEN_SPLIT;
+  var allocationMethod = allocationMethods.PRIORITY_FIRST;
 
   var publishTypes = {
     'ADD_DEBT' : 'ADD_DEBT',
@@ -173,51 +173,11 @@ define((function model(undefined){
   };
 
   var propagateTotalOwedChange = function propagateTotalOwedChange() {
-
-    // This may have been changed because of the new limits
-    var newMonthlyPayments = getLimitedMonthlyPayments(monthlyPayments);
-
-    newMonthlyPayments = roundToTwoDecimals(newMonthlyPayments);
-
-    // No need to do anything if it's exactly the same
-    if (monthlyPayments === newMonthlyPayments) {
-      return;
-    }
-
-    monthlyPayments = newMonthlyPayments;
-    publish(publishTypes.MONTHLY_PAYMENTS, {'payments':newMonthlyPayments});
-    propagateMonthlyPaymentChange();
+    // Nothing to do here
   };
 
   var propagateTotalMinimumPaymentChange = function propagateTotalMinimumPaymentChange() {
-
-    // This may have been changed because of the new limits
-    var newMonthlyPayments = getLimitedMonthlyPayments(monthlyPayments);
-
-    newMonthlyPayments = roundToTwoDecimals(newMonthlyPayments);
-
-    // No need to do anything if it's exactly the same
-    if (monthlyPayments === newMonthlyPayments) {
-      return;
-    }
-
-    monthlyPayments = newMonthlyPayments;
-    publish(publishTypes.MONTHLY_PAYMENTS, {'payments':newMonthlyPayments});
-    propagateMonthlyPaymentChange();
-  };
-
-  var getLimitedMonthlyPayments = function getLimitedMonthlyPayments(requestedMonthlyPayments) {
-
-    // Sanity check. These amounts are not invalid, but they art illogical.
-    if (requestedMonthlyPayments < totalMinimumMonthlyPayment) {
-      requestedMonthlyPayments = totalMinimumMonthlyPayment;
-    }
-
-    if (requestedMonthlyPayments > totalAmountOwed) {
-      requestedMonthlyPayments = totalAmountOwed;
-    }
-
-    return requestedMonthlyPayments;
+    // Nothing to do here
   };
 
   var publish = function publish(publishType, publishData) {
@@ -330,6 +290,7 @@ define((function model(undefined){
     if (monthlyPayments === 0) {
       payoffTime = 0;
       publish(publishTypes.PAYOFF_TIME, {'months':0});
+      return;
     }
 
     var i, orderedDebts, debt, payment, surplus, remaining;
@@ -354,7 +315,16 @@ define((function model(undefined){
       for (i = 0; i < orderedDebts.length; i++) {
         currentMonthlyMinimum += orderedDebts[i].debtObject.minimumMonthlyPayment;
       }
-      surplus = Math.max(monthlyPayments - currentMonthlyMinimum, 0.0);
+      surplus = monthlyPayments - currentMonthlyMinimum;
+
+      // If the surplus is negative, we aren't even covering the minimum!
+      // These calculations will fall apart if this happens
+      // Stop the calculation
+      if (surplus < 0) {
+        payoffTime = -1;
+        publish(publishTypes.PAYOFF_TIME, {'months':-1});
+        return;
+      }
 
       // Handle minimum monthly payments first
       // Looping backwards makes array object deletion logic cleaner
@@ -644,8 +614,6 @@ define((function model(undefined){
         throw new Error('setMonthlyPayments(): ' +
             'Invalid newMonthlyPayments: ' + newMonthlyPayments);
       }
-
-      newMonthlyPayments = getLimitedMonthlyPayments(newMonthlyPayments);
 
       newMonthlyPayments = roundToTwoDecimals(newMonthlyPayments);
 

@@ -2,7 +2,8 @@
 // JSHint directive
 /* global define */
 
-define((function view(undefined){
+define('view', ['jquery', 'jquery.splendid.textchange'],
+      function view($, jQuerySplendid, undefined){
   'use strict';
 
   var config = {
@@ -10,6 +11,8 @@ define((function view(undefined){
   };
 
   var subscribers = [];
+
+  var totalMinimum = 0.0;
 
   var domCache = {
     'debts' : {}
@@ -21,6 +24,17 @@ define((function view(undefined){
     'REQUEST_MONTHLY_PAYMENT' : 'REQUEST_MONTHLY_PAYMENT',
     'REQUEST_PRIORITY_METHOD' : 'REQUEST_PRIORITY_METHOD',
     'REQUEST_ALLOCATION_METHOD' : 'REQUEST_ALLOCATION_METHOD'
+  };
+
+  var addListener = function addListener(elem, type, callback) {
+
+    if (elem.addEventListener) {
+      // Modern browsers
+      elem.addEventListener(type, callback);
+    } else if (elem.attachEvent) {
+      // IE8 and other old browsers
+      elem.attachEvent('on' + type, callback);
+    }
   };
 
   var init = function init() {
@@ -35,96 +49,136 @@ define((function view(undefined){
 
     var documentFragment = document.createDocumentFragment();
 
+    var titleHeader = document.createElement('header');
+    titleHeader.innerHTML = 'Debt Repayment Calculator';
+    documentFragment.appendChild(titleHeader);
+
+    var instructionsP = document.createElement('p');
+    instructionsP.innerHTML = 'Enter the amount owed, APR, and minimum ' +
+        'monthly payment for each debt.';
+    instructionsP.className = 'instructionsP';
+    documentFragment.appendChild(instructionsP);
+
     var debtTable = document.createElement('table');
+    debtTable.className = 'debtTable';
     documentFragment.appendChild(debtTable);
     domCache.debtTable = debtTable;
 
       var headerTr = document.createElement('tr');
+      headerTr.className = 'headerTr';
       debtTable.appendChild(headerTr);
 
         var deleteHeaderTr = document.createElement('th');
-        deleteHeaderTr.innerHTML = 'Delete Entry';
+        deleteHeaderTr.innerHTML = '';
+        deleteHeaderTr.className = 'deleteHeader';
         headerTr.appendChild(deleteHeaderTr);
 
         var owedHeaderTr = document.createElement('th');
-        owedHeaderTr.innerHTML = 'Amount Owed';
+        owedHeaderTr.innerHTML = 'Owed';
+        owedHeaderTr.className = 'inputHeader';
         headerTr.appendChild(owedHeaderTr);
 
         var aprHeaderTr = document.createElement('th');
         aprHeaderTr.innerHTML = 'APR';
+        aprHeaderTr.className = 'inputHeader';
         headerTr.appendChild(aprHeaderTr);
 
         var monthlyTR = document.createElement('th');
-        monthlyTR.innerHTML = 'Minimum Monthly Payment';
+        monthlyTR.innerHTML = 'Monthly';
+        monthlyTR.className = 'inputHeader';
         headerTr.appendChild(monthlyTR);
 
-    var allocationDiv = document.createElement('div');
-    documentFragment.appendChild(allocationDiv);
+    var totalsDiv = document.createElement('div');
+    documentFragment.appendChild(totalsDiv);
 
-      var allocationP = document.createElement('p');
-      allocationP.innerHTML = 'How to allocate amount over monthly minimum:';
-      allocationDiv.appendChild(allocationP);
+      var totalOwedP = document.createElement('p');
+      totalOwedP.innerHTML = 'Total owed:';
+      totalsDiv.appendChild(totalOwedP);
 
-      var allocationSelect = document.createElement('select');
-      allocationSelect.addEventListener('change', requestSetAllocationMethod);
-      allocationDiv.appendChild(allocationSelect);
-      domCache.allocationSelect = allocationSelect;
+        var totalOwedSpan = document.createElement('span');
+        totalOwedSpan.innerHTML = '0.00';
+        totalOwedP.appendChild(totalOwedSpan);
+        domCache.totalOwedSpan = totalOwedSpan;
 
-        var priorityOption = document.createElement('option');
-        priorityOption.innerHTML = 'Pay to highest priority debt';
-        priorityOption.value = 'priority';
-        allocationSelect.appendChild(priorityOption);
+    var selectsContainerDiv = document.createElement('div');
+    selectsContainerDiv.className = 'selectsContainerDiv';
+    documentFragment.appendChild(selectsContainerDiv);
 
-        var evenOption = document.createElement('option');
-        evenOption.innerHTML = 'Split evenly between all debts';
-        evenOption.value = 'even';
-        allocationSelect.appendChild(evenOption);
+      var selectInstructionsP = document.createElement('p');
+      selectInstructionsP.className = 'selectInstructionsP';
+      selectsContainerDiv.appendChild(selectInstructionsP);
 
-        var proportionalOption = document.createElement('option');
-        proportionalOption.innerHTML = 'Split proportionally by amount owed';
-        proportionalOption.value = 'proportional';
-        allocationSelect.appendChild(proportionalOption);
+      var allocationDiv = document.createElement('div');
+      allocationDiv.className = 'allocationDiv';
+      selectsContainerDiv.appendChild(allocationDiv);
 
-    var prioritizationDiv = document.createElement('div');
-    documentFragment.appendChild(prioritizationDiv);
+        var allocationP = document.createElement('p');
+        allocationP.innerHTML = 'Allocation';
+        allocationDiv.appendChild(allocationP);
 
-      var prioritizationP = document.createElement('p');
-      prioritizationP.innerHTML = 'How to prioritize debts:';
-      prioritizationDiv.appendChild(prioritizationP);
+        var allocationSelect = document.createElement('select');
+        addListener(allocationSelect, 'change', requestSetAllocationMethod);
+        allocationDiv.appendChild(allocationSelect);
+        domCache.allocationSelect = allocationSelect;
 
-      var prioritizationSelect = document.createElement('select');
-      prioritizationSelect.addEventListener('change', requestSetPriorityMethod);
-      prioritizationDiv.appendChild(prioritizationSelect);
-      domCache.prioritizationSelect = prioritizationSelect;
+          var priorityOption = document.createElement('option');
+          priorityOption.innerHTML = 'Priority first';
+          priorityOption.value = 'priority';
+          allocationSelect.appendChild(priorityOption);
 
-        var aprOption = document.createElement('option');
-        aprOption.innerHTML = 'Highest APR first';
-        aprOption.value = 'apr';
-        prioritizationSelect.appendChild(aprOption);
+          var evenOption = document.createElement('option');
+          evenOption.innerHTML = 'Even split';
+          evenOption.value = 'even';
+          allocationSelect.appendChild(evenOption);
 
-        var owedOption = document.createElement('option');
-        owedOption.innerHTML = 'Lowest amount owed first';
-        owedOption.value = 'owed';
-        prioritizationSelect.appendChild(owedOption);
+          var proportionalOption = document.createElement('option');
+          proportionalOption.innerHTML = 'Proportional split';
+          proportionalOption.value = 'proportional';
+          allocationSelect.appendChild(proportionalOption);
 
-        var customOption = document.createElement('option');
-        customOption.innerHTML = 'Use order entered by user above';
-        customOption.value = 'custom';
-        prioritizationSelect.appendChild(customOption);
+      var prioritizationDiv = document.createElement('div');
+      prioritizationDiv.className = 'prioritizationDiv';
+      selectsContainerDiv.appendChild(prioritizationDiv);
+
+        var prioritizationP = document.createElement('p');
+        prioritizationP.innerHTML = 'Prioritization';
+        prioritizationDiv.appendChild(prioritizationP);
+
+        var prioritizationSelect = document.createElement('select');
+        addListener(prioritizationSelect, 'change', requestSetPriorityMethod);
+        prioritizationDiv.appendChild(prioritizationSelect);
+        domCache.prioritizationSelect = prioritizationSelect;
+
+          var aprOption = document.createElement('option');
+          aprOption.innerHTML = 'Highest APR';
+          aprOption.value = 'apr';
+          prioritizationSelect.appendChild(aprOption);
+
+          var owedOption = document.createElement('option');
+          owedOption.innerHTML = 'Lowest owed';
+          owedOption.value = 'owed';
+          prioritizationSelect.appendChild(owedOption);
+
+          var customOption = document.createElement('option');
+          customOption.innerHTML = 'As listed';
+          customOption.value = 'custom';
+          prioritizationSelect.appendChild(customOption);
 
     var paymentsDiv = document.createElement('div');
+    paymentsDiv.className = 'paymentsDiv';
     documentFragment.appendChild(paymentsDiv);
 
       var paymentP = document.createElement('p');
-      paymentP.innerHTML = 'How much to pay every month:';
+      paymentP.innerHTML = 'Monthly Payments';
+      paymentP.className = 'paymentP';
       paymentsDiv.appendChild(paymentP);
 
       var paymentInput = document.createElement('input');
-      paymentInput.type = 'number';
-      paymentInput.placeholder = 'Monthly Payments';
-      paymentInput.min = '0';
-      paymentInput.step = 'any';
-      paymentInput.addEventListener('input', requestSetMonthlyPayment);
+      paymentInput.type = 'text';
+      paymentInput.placeholder = 'Enter Here';
+      $(paymentInput).keydown(restrictInput);
+      $(paymentInput).on('textchange', requestSetMonthlyPayment);
+      paymentInput.className = 'paymentInput';
       paymentsDiv.appendChild(paymentInput);
       domCache.paymentInput = paymentInput;
 
@@ -133,8 +187,20 @@ define((function view(undefined){
 
       var payoffMessageP = document.createElement('p');
       payoffMessageP.innerHTML = '';
+      payoffMessageP.className = 'payoffMessageP';
       payoffTimeDiv.appendChild(payoffMessageP);
       domCache.payoffMessageP = payoffMessageP;
+
+    var disclaimerDiv = document.createElement('div');
+    documentFragment.appendChild(disclaimerDiv);
+
+      var disclaimerP = document.createElement('p');
+      disclaimerP.innerHTML = 'Disclaimer: Every loan is different. ' +
+          'While this tool provides a reasonable estimation, it can not ' +
+          'account for all fees, charges, policies, and other possibilities. ' +
+          'For a full debt repayment analysis, consult a financial planner.';
+      disclaimerP.className = 'disclaimerP';
+      payoffTimeDiv.appendChild(disclaimerP);
 
     programContainer.innerHTML = '';
     programContainer.appendChild(documentFragment);
@@ -159,14 +225,24 @@ define((function view(undefined){
     }
   };
 
+  var getEventElem = function getEventElem(event) {
+
+    // IE8 has its own way of handling things.
+    // This should support modern browsers and IE8
+    event = event || window.event;
+    var eventElem = event.target || event.srcElement;
+
+    return eventElem;
+  };
+
   var requestSetDebtInfo = function requestSetDebtInfo(event) {
 
-    var changedElement = event.target;
+    var eventElem = getEventElem(event);
 
     var publishData = {
-      'uid' : changedElement.dataset.uid,
-      'property' : changedElement.dataset.property,
-      'amount' : changedElement.value
+      'uid' : eventElem.dataset.uid,
+      'property' : eventElem.dataset.property,
+      'amount' : eventElem.value
     };
 
     publish('REQUEST_UPDATE_DEBT', publishData);
@@ -174,10 +250,10 @@ define((function view(undefined){
 
   var requestSetDeleteDebt = function requestSetDeleteDebt(event) {
 
-    var changedElement = event.target;
+    var eventElem = getEventElem(event);
 
     var publishData = {
-      'uid' : changedElement.dataset.uid
+      'uid' : eventElem.dataset.uid
     };
 
     publish('REQUEST_DELETE_DEBT', publishData);
@@ -230,44 +306,63 @@ define((function view(undefined){
 
     var tdDelete = document.createElement('td');
     var buttonDelete = document.createElement('button');
-    buttonDelete.innerHTML = 'Delete';
+    buttonDelete.innerHTML = 'X';
+    if (typeof buttonDelete.dataset === 'undefined') {
+      buttonDelete.dataset = {};
+    }
     buttonDelete.dataset.uid = uid;
-    buttonDelete.addEventListener('click', requestSetDeleteDebt);
+    addListener(buttonDelete, 'click', requestSetDeleteDebt);
+    buttonDelete.className = 'deleteColumn';
     tdDelete.appendChild(buttonDelete);
 
     var tdAmountOwed = document.createElement('td');
     var inputAmountOwed = document.createElement('input');
-    inputAmountOwed.type = 'number';
-    inputAmountOwed.placeholder = 'Amount Owed';
-    inputAmountOwed.min = '0';
-    inputAmountOwed.step = 'any';
+    inputAmountOwed.type = 'text';
+    inputAmountOwed.placeholder = 'Owed';
+    // inputAmountOwed.min = '0';
+    // inputAmountOwed.step = 'any';
+    if (typeof inputAmountOwed.dataset === 'undefined') {
+      inputAmountOwed.dataset = {};
+    }
     inputAmountOwed.dataset.uid = uid;
     inputAmountOwed.dataset.property = 'amountOwed';
-    inputAmountOwed.addEventListener('input', requestSetDebtInfo);
+    $(inputAmountOwed).keydown(restrictInput);
+    $(inputAmountOwed).on('textchange', requestSetDebtInfo);
+    inputAmountOwed.className = 'inputColumn';
     tdAmountOwed.appendChild(inputAmountOwed);
     debtCache.amountOwedInput = inputAmountOwed;
 
     var tdAPR = document.createElement('td');
     var inputAPR = document.createElement('input');
-    inputAPR.type = 'number';
+    inputAPR.type = 'text';
     inputAPR.placeholder = 'APR';
-    inputAPR.min = '0';
-    inputAPR.step = 'any';
+    // inputAPR.min = '0';
+    // inputAPR.step = 'any';
+    if (typeof inputAPR.dataset === 'undefined') {
+      inputAPR.dataset = {};
+    }
     inputAPR.dataset.uid = uid;
     inputAPR.dataset.property = 'apr';
-    inputAPR.addEventListener('input', requestSetDebtInfo);
+    $(inputAPR).keydown(restrictInput);
+    $(inputAPR).on('textchange', requestSetDebtInfo);
+    inputAPR.className = 'inputColumn';
     tdAPR.appendChild(inputAPR);
     debtCache.aprInput = inputAPR;
 
     var tdMinimumMonthly = document.createElement('td');
     var inputMinimumMonthly = document.createElement('input');
-    inputMinimumMonthly.type = 'number';
-    inputMinimumMonthly.placeholder = 'Minimum Monthly Payment';
-    inputMinimumMonthly.min = '0';
-    inputMinimumMonthly.step = 'any';
+    inputMinimumMonthly.type = 'text';
+    inputMinimumMonthly.placeholder = 'Monthly';
+    // inputMinimumMonthly.min = '0';
+    // inputMinimumMonthly.step = 'any';
+    if (typeof inputMinimumMonthly.dataset === 'undefined') {
+      inputMinimumMonthly.dataset = {};
+    }
     inputMinimumMonthly.dataset.uid = uid;
     inputMinimumMonthly.dataset.property = 'minimumMonthly';
-    inputMinimumMonthly.addEventListener('input', requestSetDebtInfo);
+    $(inputMinimumMonthly).keydown(restrictInput);
+    $(inputMinimumMonthly).on('textchange', requestSetDebtInfo);
+    inputMinimumMonthly.className = 'inputColumn';
     tdMinimumMonthly.appendChild(inputMinimumMonthly);
     debtCache.monthlyMinimumInput = inputMinimumMonthly;
 
@@ -282,6 +377,91 @@ define((function view(undefined){
       throw new Error('newDebtInput(): ' +
         'debtTable DOM element mysteriously vanished!');
     }
+  };
+
+  var restrictInput = function restrictInput(eventObject) {
+
+    if (keyAddsNoCharacters(eventObject) || keyIsNumber(eventObject)) {
+      // Allow numbers and keys that don't add characters to the input
+      return;
+
+    } else if (keyIsDecimal(eventObject)) {
+      // Prevent multiple decimals
+      var eventElem = getEventElem(eventObject);
+      var count = (eventElem.value.match(/\./g) || []).length;
+
+      if (count > 0) {
+        eventObject.preventDefault();
+      }
+
+    } else {
+      // Prevent all other input
+      eventObject.preventDefault();
+    }
+  };
+
+  var keyAddsNoCharacters = function keyAddsNoCharacters(eventObject) {
+
+    var keyCode = eventObject.keyCode;
+    var validKeys = [
+      8, // Backspace
+      9, // Tab
+      13, // Enter
+      27, // Escape
+      46, // Delete
+      35, // End
+      36, // Home
+      37, // Left
+      38, // Up
+      39, // Right
+      40 // Down
+    ];
+
+    var length = validKeys.length;
+
+    for (var i = 0; i < length; i++) {
+      if (keyCode === validKeys[i]) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  var keyIsNumber = function keyIsNumber(eventObject) {
+
+    var keyCode = eventObject.keyCode;
+    var shift = eventObject.shiftKey;
+
+    // Numbers across the top of the keyboard
+    if (!shift && keyCode > 47 && keyCode < 58) {
+      return true;
+    }
+
+    // Numpad numbers
+    if (keyCode > 95 && keyCode < 106){
+      return true;
+    }
+
+    return false;
+  };
+
+  var keyIsDecimal = function keyIsDecimal(eventObject) {
+
+    var keyCode = eventObject.keyCode;
+    var shift = eventObject.shiftKey;
+
+    // Period (Near right shift on most US QWERTY keyboards)
+    if (!shift && keyCode === 190) {
+      return true;
+    }
+
+    // Numpad decimal
+    if (keyCode === 110) {
+      return true;
+    }
+
+    return false;
   };
 
   // Initial setup
@@ -344,7 +524,10 @@ define((function view(undefined){
               'Invalid property: ' + property);
         }
 
-        elem.value = amount;
+        // Don't bother making changes if it would be exactly the same
+        if (Number(elem.value).toFixed(2) !== Number(amount).toFixed(2)){
+          elem.value = amount;
+        }
       }
     },
 
@@ -425,8 +608,8 @@ define((function view(undefined){
 
       if (domCache.paymentInput) {
         if (amount === 0) {
-          domCache.paymentInput.value = undefined;
-        } else {
+          domCache.paymentInput.value = '';
+        } else if (Number(domCache.paymentInput.value).toFixed(2) !== Number(amount).toFixed(2)) {
           domCache.paymentInput.value = amount;
         }
       }
@@ -435,12 +618,14 @@ define((function view(undefined){
     'setTotalAmountOwed' : function setTotalAmountOwed(amount) {
       // We aren't actually doing anything with this right now
 
-      /*
       if (typeof amount !== 'number' || amount < 0.0) {
         throw new Error('setTotalAmountOwed(): ' +
             'Invalid amount: ' + amount);
       }
-      */
+
+      if (domCache.totalOwedSpan) {
+        domCache.totalOwedSpan.innerHTML = amount.toFixed(2);
+      }
     },
 
     'setTotalMinimumMonthlyPayment' : function setTotalMinimumMonthlyPayment(amount) {
@@ -450,17 +635,18 @@ define((function view(undefined){
             'Invalid amount: ' + amount);
       }
 
-      // Set the lower limit on monthly payments
-      if (domCache.paymentInput) {
-        domCache.paymentInput.min = amount;
-      }
+      totalMinimum = amount;
+
+      // if (domCache.totalMinimumSpan) {
+      //   domCache.totalMinimumSpan.innerHTML = amount.toFixed(2);
+      // }
     },
 
     'setPayoffTime' : function setPayoffTime(months) {
 
       if ((typeof months !== 'number' &&
           typeof months !== 'undefined') ||
-          months < 0) {
+          months < -1) {
         throw new Error('setPayoffTime(): ' +
             'Invalid months: ' + months);
       }
@@ -471,6 +657,10 @@ define((function view(undefined){
         payments = Number(domCache.paymentInput.value);
       }
 
+      // if (domCache.totalMinimumSpan) {
+      //   minimumPayment = domCache.totalMinimumSpan.innerHTML;
+      // }
+
       if (domCache.payoffMessageP) {
 
         if (typeof months === 'undefined' || payments === 0) {
@@ -479,26 +669,48 @@ define((function view(undefined){
         } else if (months === 0) {
           domCache.payoffMessageP.innerHTML = '';
 
-        } else if (months === 1) {
-          domCache.payoffMessageP.innerHTML = 'By paying ' +
-              payments.toFixed(2) + ' every month, it will take roughly ' +
-            '1 month for you to pay off all of your debts.';
+        } else if (months === -1 && totalMinimum !== 0) {
+          domCache.payoffMessageP.innerHTML = 'Be sure to enter an amount ' +
+              'at least as high as the total minimum monthly payment of ' +
+              totalMinimum + '.';
 
         } else if (months === 1200) {
           domCache.payoffMessageP.innerHTML = 'By paying ' +
               payments.toFixed(2) + ' every month, it will take over ' +
-               '100 years for you to pay off all of your debts! ' +
-               'You should consider making larger payments.';
+               '100 years to pay off all of your debts!';
 
         } else {
-          domCache.payoffMessageP.innerHTML = 'By paying ' +
-              payments.toFixed(2) + ' every month, it will take roughly ' +
-              months + ' months for you to pay off all of your debts.';
+          var message = [];
+          message.push('By paying ' + payments.toFixed(2) +
+              ' every month, it will take roughly ');
+
+          var years = Math.floor(months/12);
+          months = months%12;
+
+          if (years === 1) {
+            message.push('1 year ');
+          } else if (years > 0) {
+            message.push(years + ' years ');
+          }
+
+          if (years > 0 && months > 0) {
+            message.push('and ');
+          }
+
+          if (months === 1) {
+            message.push('1 month ');
+          } else if (months > 0) {
+            message.push(months + ' months ');
+          }
+
+          message.push('to pay off all of your debts.');
+
+          domCache.payoffMessageP.innerHTML = message.join('');
         }
       }
     }
   };
-}()));
+});
 
 
 
