@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/KoratDragonDen/debt-calculator-sample.git"
+    "url": "https://github.com/DracoAdvigilat/debt-calculator-sample.git"
   },
   "devDependencies": {
     "grunt": "~0.4.5",

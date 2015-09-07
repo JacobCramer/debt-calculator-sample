@@ -2,7 +2,7 @@
 #Freelancing Sample - Debt Repayment Calculator
 
 ###What are we looking at here?
-This is a sample of my (Korat Dragon Den's Jacob D Cramer) work. It's intended to show my skills with the **JavaScript** language when developing for a browser environment. While it's designed to have a nice CSS styled front-end, the focus is on the back-end engine.
+This is a sample of work by Jacob Daniel Cramer, also known by the usernames DracoAdvigilat and DracoAdvi. It's intended to show my skills with the **JavaScript** language when developing for a browser environment. While it's designed to have a nice CSS styled front-end, the focus is on the back-end engine.
 
 There are a handful of design philosophies that were taken into account when designing the engine. First and foremost was separation of concerns through a **Model-View-Presenter** type design. Model-View-Presenter (MVP), is a slightly different take Model-View-Controller (MVC) design that aims for even greater separation between the front-end and back-end, allowing for **easier testing** and **better modularity**.
 
